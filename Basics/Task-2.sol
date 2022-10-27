@@ -14,11 +14,14 @@ contract Blacklist{
 // Blacklist multiple address using loop
 
 function bulk_blacklisted(address[] memory users) internal {
+    
        for (uint256 i=0; i < users.length; i++){
-        _blacklisted[users[i]] =  true;
-        unchecked{
-        accounts_blacklisted.push(users[i]);
-         }         }
+           // condition to avoid duplication
+           require(_blacklisted[users[i]] == false,'Address Already Blacklisted'); 
+           _blacklisted[users[i]] =  true;
+           unchecked{
+               accounts_blacklisted.push(users[i]);
+               } }
     }
 
     // Adding addresses into blacklist Array from external function
@@ -35,11 +38,15 @@ function bulk_blacklisted(address[] memory users) internal {
         else{
             return false;
         }
-        // (_blacklisted[addr] == true ? true : false); //need solution
          }
 
+        //same as above function using ternary operator instead of conditionals
+        function checkBlacklist(address addr) public view returns(bool){
+        return (_blacklisted[addr] ? true : false);
+    }
+
     // Checking number of accounts in blacklist array
-    function Total_Addressesblacklisted() external view returns (uint){
+    function Total_blacklisted() external view returns (uint){
         return accounts_blacklisted.length;
     }
 
