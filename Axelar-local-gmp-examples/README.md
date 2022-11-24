@@ -1,7 +1,7 @@
 
 # Axelar cross-chain dApp examples
 
-## Modified 'Hello-world' example to send custom message..below is the link to view
+## Modified 'Hello-world' and 'callContractWithToken' example to send custom message and aUSDC..below is the link to view
 
 https://testnet.axelarscan.io/address/0x1f8596081e9205Cd55952EFA1e299E24fb73d3b9
 
