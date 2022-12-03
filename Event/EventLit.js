@@ -30,9 +30,9 @@ async function main() {
     // all methods will be executed after transfer event is triggered in the contract
     //listening to transfer event
     contract.on('Transfer', async (from, to, value, event) => {
-        let info = {
-            from: from,
-            to: to,
+        let info = { //saving all event details into a variable
+            from: from, // sender address
+            to: to, // recipient address
             value: value.toString(), // decimals according to token
             data: event, //all additional details i.e., blockheight, txnHash etc.
         };
@@ -40,7 +40,7 @@ async function main() {
         // printing the transfer event triggered from the transaction with all its params
         console.log(JSON.stringify(info, null, 4));
 
-        // defining condition when a user send funds to contract the transfer transaction and LIT actions to sign a message will be executed 
+        // defining condition when a user send funds to contract, the transfer function and LIT actions to a sign either message or txn will be executed 
         if (info.to == tokenAddress && info.value >= 1) {
 
             //getting address of sender
@@ -74,20 +74,20 @@ async function main() {
                 //converting Private key hash into uintarray8
                 const privKeyBuffer = fromString(PRIVATE_KEY, "base16");
 
-                // deriving wallet 
+                // deriving wallet public address from its private key
                 const wallet = new ethers.Wallet(privKeyBuffer);
 
                 // defining message to be signed from specific network; needs to be supported by Lit Protocol
                 const domain = "Polygon Mumbai";
                 const origin = "https://rpc-mumbai.matic.today";
 
-                //converting the txn object into string
+                //converting the txn object trigerring from event into string
                 const txnString = JSON.stringify(tknTransfer);
 
                 // message to be signed
                 const txnMessage = ('You have successfully become member of Lit Dao');
 
-                // authenticate by signing a message for event triggered on off-chain network 
+                // authenticate by signing a message for event triggered on other network - can be used for same network as well.
                 const signTxn = new siwe.SiweMessage({
                     domain,
                     address: wallet.address,
@@ -110,7 +110,7 @@ async function main() {
 
                 //  initialising the Lit node
                 const litNodeClient = new LitJsSdk.LitNodeClient({
-                    litNetwork: "serrano",
+                    litNetwork: "serrano", // conneting to serrano network
                 });
 
                 // passing params for authSig to pass as JS params
