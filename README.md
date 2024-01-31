@@ -55,7 +55,7 @@
 53.	Safemath method can be instead of decrement or increment like instead maker++ use maker.add(1).
 54.	Natspec are comments with different  tags like author, dev, title, param, audit etc.
  
-Patrick-Foundry - solidity
+# Patrick-Foundry - solidity
 
 
 1.	Bytes and bytes32 have different bytes values in solidity.
@@ -99,8 +99,8 @@ Patrick-Foundry - solidity
 39.	Struct does not allow mapping and array in it.... https://github.com/ethereum/solidity/issues/12302 
 40.	Constructor cannot have visibility but can be mark payable.
  
-Foundry-test
-https://github.com/Cyfrin/foundry-full-course-f23#lesson-7-foundry-fund-me
+# Foundry-test
+### https://github.com/Cyfrin/foundry-full-course-f23#lesson-7-foundry-fund-me
 
 1.	Foundry install on windows using git...guide YT smart contract programmer...’foundryup’ inside git install foundry on windows.
 2.	forge init is used to start a new project...forge build or compile for compiling contract.
@@ -136,4 +136,10 @@ https://github.com/Cyfrin/foundry-full-course-f23#lesson-7-foundry-fund-me
 32.	BTT starts with default behaviour of contract and then modifier are created and added before each state changing.
 33.	 Vm.warp() is the cheat code to create a time difference between two txns. By default it is 1 i.e., vm.warp(block.timestamp) is 1.
 34.	 Receive and fallback is must for contract receiving native token...payable function does not provide contract with ability to receive ether.
+
+ 
+
+
+
+
 
