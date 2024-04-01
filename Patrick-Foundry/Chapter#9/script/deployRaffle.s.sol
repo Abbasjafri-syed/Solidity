@@ -7,6 +7,8 @@ import {rafflePractice} from "../src/raffle.sol";
 import {helperConfig} from "./helperConfig.s.sol";
 
 contract deployRaffle is Script {
+    receive() external payable {}
+
     function run() public returns (rafflePractice, helperConfig) {
         // functionn to deploy raffle contract and configuration
         helperConfig net_Config = new helperConfig();

@@ -8,39 +8,46 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/Ag
 import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
 
-contract rafflePractice is VRFConsumerBaseV2, Ownable  {
-    AggregatorV3Interface USDC; // chainlink usdc address feed
-
+contract rafflePractice is VRFConsumerBaseV2, Ownable {
     error less_Amount();
     error lastWinner_NotAllowed();
     error participant_presents();
     error value_NotUpdated();
     error upKeep_notRequired(uint256 contract_balance, uint256 funder_count, uint256 raffle_Status);
 
+    event raffleCreated(uint256 indexed raffle_Count); // event for every raffle created
+    event raffleFunder(address indexed funder_address); // event for every funder entering raffle
+
     enum raffle_Status { // creating a custom data type known as enum similar to bool or uint
         not_Exists,
         Exists
     }
 
+    raffle_Status public current_State; // pointer var towards enum type
+    AggregatorV3Interface USDC; // chainlink usdc address feed
+    VRFCoordinatorV2Interface COORDINATOR; // coordinator account for getting random number
+
     address[] public Participants; // array of all participant
-    address winner_Update; // last winner
-    raffle_Status private current_State; // pointer var towards enum type
-    mapping(address funder => uint256 Count) ticket_Count; // increment ticket count for an address
-    mapping(address funder => uint256 Count) token_amount; // add ticket amount for evry entry
+    address public winner_Update; // last winner
+    // address vrfCoordinator = 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625; // vrf address chainlink
+
+    mapping(address funder => uint256 Count) public ticket_Count; // increment ticket count for an address
+    mapping(address funder => uint256 Count) public token_amount; // add ticket amount for every entry
 
     uint256 immutable ticket_Price; // ticket price
     uint256 time_Started; // start time
-    uint256 time_Ended; // end time of raffle
-    uint256 private last_randomValue; // last value from vrf
-    uint256 private latest_randomValue; // latestrandom value from vrf
+    uint256 public time_Ended; // end time of raffle
+    uint256 public last_randomValue; // last value from vrf
+    uint256 public latest_randomValue; // latestrandom value from vrf
+    uint256 public raffleCount; // creating count for every raffle
 
-    VRFCoordinatorV2Interface COORDINATOR; // coordinator account for getting random number
-    // address vrfCoordinator = 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625; // vrf address chainlink
-    bytes32 s_keyHash; // gas lane hash value
-    uint32 callbackGasLimit; // gas limit for callback fulfillRandomWords
-    uint16 requestConfirmations; // number of block confirms
+    uint64 s_subscriptionId; //
+    uint32 callbackGasLimit;
+    // gas limit for callback fulfillRandomWords
     uint32 numWords; // numbr of random words
-    uint64 s_subscriptionId;
+    uint16 requestConfirmations; // number of block confirms
+
+    bytes32 s_keyHash; // gas lane hash value
 
     constructor(
         address chainlink_Feed,
@@ -51,7 +58,7 @@ contract rafflePractice is VRFConsumerBaseV2, Ownable  {
         uint16 confirmations,
         uint32 num_Values,
         uint64 subscriptionId
-    )  Ownable()  VRFConsumerBaseV2(coordinator_vrf) {
+    ) Ownable() VRFConsumerBaseV2(coordinator_vrf) {
         USDC = AggregatorV3Interface(chainlink_Feed); // sepolia usdc address
         ticket_Price = price; // setting ticket price to 1 dollar
         COORDINATOR = VRFCoordinatorV2Interface(coordinator_vrf);
@@ -68,6 +75,8 @@ contract rafflePractice is VRFConsumerBaseV2, Ownable  {
         current_State = raffle_Status.Exists; // changing state
         time_Started = block.timestamp; // start time
         time_Ended = time_Started + 4 minutes; //  end time
+        emit raffleCreated(raffleCount);
+        raffleCount++;
     }
 
     function enterRaffle() external payable {
@@ -88,8 +97,19 @@ contract rafflePractice is VRFConsumerBaseV2, Ownable  {
         }
         Participants.push(msg.sender); // adding funder to array
         ticket_Count[msg.sender]++; // adding winner
-        token_amount[msg.sender] += tokenPrice; // adding funder balance testnet
-            // token_amount[msg.sender] += msg.value; // remix check
+        emit raffleFunder(msg.sender); // emiting event when for funder
+    }
+
+    // create refund for excess amount
+    function refund(uint256 tokenPrice) internal {
+        uint256 usdPrice = price_Feed(); // getting USDC token price in usd
+        uint256 amountDifference = tokenPrice - ticket_Price; // getting amount to be refunded
+        uint256 amountRefund = (amountDifference * 1e18) / usdPrice; // converting usd into eth 1e18
+        // token_amount[msg.sender] += ((tokenPrice - amountDifference) * 1e18) / usdPrice; // amount added in msg.value
+        token_amount[msg.sender] += tokenPrice - amountDifference; // amount as per ticket price
+
+        (bool success,) = msg.sender.call{value: amountRefund}(""); // sending back additional amount
+        require(success);
     }
 
     function Raffle_Winner() external onlyOwner {
@@ -99,9 +119,9 @@ contract rafflePractice is VRFConsumerBaseV2, Ownable  {
 
         //  add modulo to have select a random winner
         uint256 random_Value = (
-            uint256(keccak256(abi.encode(latest_randomValue, block.timestamp, Participants.length, msg.data)))
+            uint256(keccak256(abi.encode(latest_randomValue, block.timestamp, Participants.length)))
                 % Participants.length
-        ) + 1; // get a random number with limit related to number of participants
+        ); // get a random number with limit related to number of participants
 
         // last winner cannot win raffle twice
         if (Participants[random_Value] == winner_Update) {
@@ -114,9 +134,9 @@ contract rafflePractice is VRFConsumerBaseV2, Ownable  {
         current_State = raffle_Status.not_Exists; // resetting status back to false;
         last_randomValue = latest_randomValue; // after winner caching value
 
-        // transferring balance to winner
+        // transferring raffle balance to winner
         (bool success,) = winner_Update.call{value: address(this).balance}("");
-        require(success, "txn failed");
+        require(success, "Txn failed");
     }
 
     function check_UpKeep(bytes memory /* check*/ )
@@ -134,7 +154,7 @@ contract rafflePractice is VRFConsumerBaseV2, Ownable  {
         return (upkeepNeeded, "0x00"); // returning values
     }
 
-    function getrandom() external returns (uint256) {
+    function genrt_random() external returns (uint256) {
         (bool upkeep,) = check_UpKeep(""); // checking upkeep condition
         if (!upkeep) {
             // reverting if any condition not met
@@ -143,8 +163,7 @@ contract rafflePractice is VRFConsumerBaseV2, Ownable  {
         uint256 random_Value = (
             uint256(keccak256(abi.encode(latest_randomValue, block.timestamp, Participants.length, msg.data)))
                 % Participants.length
-        ) + 1;
-        // console.logBytes(msg.data);
+        ) + 1; // to get value within teh range of all funders if +1 is not insert will leave last funder
         latest_randomValue = random_Value; // assigning value to variable
         return random_Value; // returning latest value
     }
@@ -182,7 +201,7 @@ contract rafflePractice is VRFConsumerBaseV2, Ownable  {
 
     function reset_Raffle() external onlyOwner {
         //resetting waffle if no participation
-        require(block.timestamp > time_Ended, "raffle does not end"); // checking time before resetting
+        require(block.timestamp > time_Ended, "Raffle does not end"); // checking time before resetting
         if (Participants.length == 0) {
             // if no participant change status
             current_State = raffle_Status.not_Exists;
@@ -190,16 +209,6 @@ contract rafflePractice is VRFConsumerBaseV2, Ownable  {
             // if participants present reverts
             revert participant_presents();
         }
-    }
-
-    // create refund for excess amount
-    function refund(uint256 tokenPrice) internal {
-        uint256 usdPrice = price_Feed(); // getting USDC token price in usd
-        uint256 amountDifference = tokenPrice - ticket_Price; // getting amount to be refunded
-        uint256 amountRefund = (amountDifference * 1e18) / usdPrice; // converting usd into eth 1e18
-
-        (bool success,) = msg.sender.call{value: amountRefund}(""); // sending back additional amount
-        require(success);
     }
 
     function reset_Mappings() internal {
@@ -217,6 +226,10 @@ contract rafflePractice is VRFConsumerBaseV2, Ownable  {
         uint256 USDC_Price = price_Feed(); // get feed price
         uint256 price_USD = (tokenAmount * USDC_Price) / 1e18; // converting msg.value into USD
         return price_USD; // returning amount into USD
+    }
+
+    function funders_Length() external view returns (uint256) {
+        return Participants.length;
     }
 
     // add chainlink aggregator price feed

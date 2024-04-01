@@ -48,7 +48,7 @@ contract helperConfig is Script {
         uint96 gasPriceLink = 1e9; // 1 gwei
 
         // vm.startBroadcast();
-        MockV3Aggregator mockV3 = new MockV3Aggregator(8, 390012345678);
+        MockV3Aggregator mockV3 = new MockV3Aggregator(8, 350012345678);
         VRFCoordinatorV2Mock mock2vrf = new VRFCoordinatorV2Mock(basefee, gasPriceLink);
         // vm.stopBroadcast();
 
