@@ -11,7 +11,7 @@ contract deployRaffle is Script {
 
     function run() public returns (rafflePractice, helperConfig) {
         // functionn to deploy raffle contract and configuration
-        helperConfig net_Config = new helperConfig();
+        helperConfig net_Config = new helperConfig(); // deploying helperconfig contract
 
         (
             address chainlink_Feed,
@@ -22,12 +22,12 @@ contract deployRaffle is Script {
             uint16 confirmations,
             uint32 num_Values,
             uint64 subscriptionId
-        ) = net_Config.active_Config();
+        ) = net_Config.active_Config(); // assigning values t0 params for passing 
 
         // vm.startBroadcast();
         rafflePractice raffle = new rafflePractice(
             chainlink_Feed, price, coordinator_vrf, hash, call_Limit, confirmations, num_Values, subscriptionId
-        );
+        ); // depolying and passing values as arguments 
         // vm.stopBroadcast();
 
         return (raffle, net_Config);

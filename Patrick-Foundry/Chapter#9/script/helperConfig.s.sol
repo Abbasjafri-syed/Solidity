@@ -22,10 +22,10 @@ contract helperConfig is Script {
     network_Config public active_Config;
 
     constructor() {
-        block.chainid == 11155111 ? active_Config = sepoliaNetwork() : active_Config = anvilNetwork();
+        block.chainid == 11155111 ? active_Config = sepoliaNetwork() : active_Config = anvilNetwork(); // ternary operator if chainid met deploy on sepolia
     }
 
-    function sepoliaNetwork() public pure returns (network_Config memory) {
+    function sepoliaNetwork() public pure returns (network_Config memory) { // pasing values for sepolia
         return network_Config(
             0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E,
             1e18,
@@ -34,11 +34,11 @@ contract helperConfig is Script {
             100000,
             3,
             2,
-            0
+            9769
         );
     }
 
-    function anvilNetwork() public returns (network_Config memory) {
+    function anvilNetwork() public returns (network_Config memory) { // passing values for anvil local cahin
         if (active_Config.coordinator_vrf != address(0)) {
             return active_Config;
         }

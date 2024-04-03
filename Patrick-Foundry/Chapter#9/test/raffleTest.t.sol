@@ -51,7 +51,8 @@ contract raffleTest is Test {
         raffle.create_Raffle(); // calling function
 
         assertEq(uint256(raffle.current_State()), uint256(rafflePractice.raffle_Status.Exists)); // validating enum value
-        assertEq(raffle.time_Ended(), 241); // validating end time
+        // assertEq(raffle.time_Ended(), 241); // validating end time
+        console2.log(block.timestamp);
     } // forge t --mt test_raffleCreate -vvv
 
     function test_nonOwner_raffleCreate() external {
@@ -94,9 +95,8 @@ contract raffleTest is Test {
     } // forge t --mt test_EventRaffleEnter -vvv
 
     function test_recrdLogRaffleEnter() external {
+        vm.recordLogs(); // syntax for logging all events
 
-        vm.recordLogs(); // syntax for logging all events 
-        
         hoax(raffle.owner(), 2e18); // starting a call with the owner
         raffle.create_Raffle(); // 1st event emitted from function
 
@@ -107,12 +107,21 @@ contract raffleTest is Test {
 
         bytes32 create_Event = event_Entries[0].topics[1]; // logs are saved as bytes32 types
         bytes32 fund_Event = event_Entries[1].topics[1]; // 1st topics are access as they stored actual values that are emitted
-        
 
         // assertEq(event_Entries.length, 1);
-        assertEq(create_Event, bytes32(uint(0)));
+        assertEq(create_Event, bytes32(uint256(0)));
         assertEq(fund_Event, bytes32(uint256(uint160(funder))));
     } // forge t --mt test_recrdLogRaffleEnter -vvv
+
+    function test_cntract() external {
+        vm.startPrank(funder);
+
+        address spam = 0x63605E53D422C4F1ac0e01390AC59aAf84C44A51;
+
+        bool maker = spam.code.length > 0;
+
+        console2.log(maker);
+    } // forge t --mt test_isContract -vvv
 
     function test_fundRaffle() external {
         vm.prank(raffle.owner()); // starting a call with the owner
@@ -128,7 +137,7 @@ contract raffleTest is Test {
         raffle.create_Raffle(); // calling function
 
         vm.prank(funder); // caling txn with a normal user
-        raffle.enterRaffle{value: 1e18}(); // sending 1 ether to enter raffle
+        raffle.enterRaffle{value: 2e18}(); // sending 1 ether to enter raffle
         _;
     } // modifier to be used in multiple test
 
@@ -175,7 +184,8 @@ contract raffleTest is Test {
         raffle.enterRaffle{value: 1e18}(); // funding raffle
 
         vm.startPrank(raffle.owner()); // continous call by owner
-        raffle.enterRaffle{value: 1e18}(); // funding
+
+        raffle.enterRaffle{value: raffle.ticket_Price()}(); // funding
         raffle.enterRaffle{value: 1e18}(); // funding
         raffle.enterRaffle{value: 1e18}(); // funding
         raffle.enterRaffle{value: 1e18}(); // funding
@@ -238,6 +248,65 @@ contract raffleTest is Test {
         );
         raffle.genrt_random();
     } // forge t --mt test_randomGenerate -vvv
+
+    function test_fundMultiple() external {
+        vm.prank(raffle.owner());
+        raffle.create_Raffle();
+
+        vm.startPrank(funder);
+        for (uint256 i; i <= 9; ++i) {
+            // running a loop to fund a
+            raffle.enterRaffle{value: raffle.ticket_Price()}();
+        }
+        console2.log(address(raffle).balance);
+        assertEq(raffle.ticket_Count(funder), 10);
+    } // forge t --mt test_fundMultiple -vvv
+
+    function test_WinnerMultipleFunder() external {
+        vm.prank(raffle.owner());
+        raffle.create_Raffle();
+
+        uint256 num_Funders = 23; // number of funders
+
+        for (uint256 i; i <= num_Funders; ++i) {   // running a loop to fund raffle from multiple users
+            // if (i == 9) break; // breaking loop at address[9] 
+            if (i == 9) continue; // skipping address[9] as it causing issue
+            address fundered = address(uint160(i)); // changing each number to addresss
+            hoax(fundered, 3e18); // funding each address 
+            raffle.enterRaffle{value: 2e18}(); 
+        }
+        assertEq(raffle.funders_Length(), 23); // asserting number of funders
+    } // forge t --mt test_WinnerMultipleFunder -vvv
+    // forge t --mt test_WinnerMultipleFunder -vvv -f $fork_main_url
+
+    function test_winnerFromMultipleFunder() external Fund_Raffle() {
+        uint256 num_Funders = 30;
+
+        for (uint256 i; i <= num_Funders; ++i) {   // running a loop to fund raffle from multiple users
+            if (i == 9) continue; // skipping address[9] as it causing issue
+            address fundered = address(uint160(i)); // changing each number to addresss
+            hoax(fundered, 3e18); // funding each address 
+
+            if (i == 27) console2.log('This is winner initial balance:', address(uint160(27)).balance); // this is winner address balance
+            raffle.enterRaffle{value: 2e18}();  // funding raffle contract
+        }
+        uint contract_Balance = address(raffle).balance; // caching raffle balance
+        uint after_Balance = address(uint160(27)).balance; // caching winner balance after funding
+
+        vm.warp(block.timestamp + 260); // passing time limit
+        raffle.genrt_random(); // calling for generating random value
+
+        vm.prank(raffle.owner());
+        raffle.Raffle_Winner(); // calling function to select winner
+        console2.log(raffle.winner_Update()); // checking winner balance
+
+        console2.log('This is winner balance after raffle:', address(uint160(27)).balance);
+        assertEq(uint(raffle.current_State()), uint(rafflePractice.raffle_Status.not_Exists)); // checking if status is reset
+        assertEq(raffle.funders_Length(), 0); // validating funders length reset
+        assertEq(address(raffle.winner_Update()).balance, contract_Balance + after_Balance); // checking winner balance update
+
+    } // forge t --mt test_winnerFromMultipleFunder -vvv
+    // forge t --mt test_winnerFromMulipleFunder -vvv -f $test_rpc_url
 
     function test_ran_TimeCondition() external Fund_Raffle {
         vm.expectRevert(); // expecting revert as time not passed

@@ -34,7 +34,7 @@ contract rafflePractice is VRFConsumerBaseV2, Ownable {
     mapping(address funder => uint256 Count) public ticket_Count; // increment ticket count for an address
     mapping(address funder => uint256 Count) public token_amount; // add ticket amount for every entry
 
-    uint256 immutable ticket_Price; // ticket price
+    uint256 public immutable ticket_Price; // ticket price
     uint256 time_Started; // start time
     uint256 public time_Ended; // end time of raffle
     uint256 public last_randomValue; // last value from vrf
