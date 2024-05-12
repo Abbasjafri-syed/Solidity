@@ -127,6 +127,32 @@
  
 
 58.	Events must be separately defined in the test contract with same name and parameters(datatypes).
+59.	ERC-677 are upgradeable version and erc-777 as they are backward compatible erc-20.
+60.	If a contract is inherited (and have a constructor), it constructor can be passed as a modifier with the parent contract constructor.
+ 
+61.	An account can receive ERC20 token even if it does not have ```receive``` or ```fallback``` function.
+62.	ERC20 contract ```approve``` function returns true even if an address does not have ERC20 tokens and call the approve function.
+63.	```transfer``` and ```send``` method will revert if receive and fallback function have any logic in it. This is due to 2300 gas limitation on these functions.
+64.	``call`` method is low-level function which is called only by functions and not contractTypes. It returns bool and data.
+ 
+65.	Eth fund can be withdraw from contract through low level call even if there is no withdraw function in the contract.
+66.	Integers cannot be directly converted to strings it requires OZ’s string lib and ```.toString``` syntax.
+67.	Abi.encode is used to convert a data type into bytes.
+ 
+
+68.	Abi.decode is used to convert bytes into its original datatype.
+ 
+69.	If multiple strings are required to concatenate they can be must be encode and then casted to string before concatenation.
+ 
+
+70.	
+71.	
+
+
+
+
+
+
  
 # Foundry-test
 ### https://github.com/Cyfrin/foundry-full-course-f23#lesson-7-foundry-fund-me
@@ -181,17 +207,40 @@
 48.	  expectRevert with custom error and arguments only allows 3 params.
 49.	 Custom error shows message for the reason a txn fails, while empty ```revert()``` shows ```EvmError: Revert```.
 50.	 Events are required to be separately defined in test contract. 
-51.	```vm.expectEmit(false, false, false, false,address(emitter))``` takes max of 5 args...1st 4 are bool, last one is emitting contract address.
+51.	```vm.expectEmit(true, false, false, false, address(emitter))``` takes max of 5 args...1st 4 are bool, last one is emitting contract address.  1st argument must be true to pass the test or pass empty parentheses for default check.
 52.	 If no args are passed in ```vm.expectEmit()``` first topic is true by default.
-53.	Events are stored using ``vm.recordLogs()`` syntax in foundry. After this all txn are made which emits event and are stored.
-54.	```Vm.Log[] memory event_Entries = vm.getRecordedLogs()``` is expression which is used for accessing all events.
-55.	 Events emitted are stored in 1st index of topic as 0th index stored the whole event expression.
+53.	 If only address is passed in last parameter ```vm.expectEmit(address(emitter))```  it checks the emitter of the event which is the contract.
+54.	Events parameter if is an address it should be indexed, as only topics are checked.
  
-56.	 Events are stored in bytes32 type and all events must be casted to type bytes32 before validating any event emitted.
-57.	 Converting address into bytes32 require first them to be casted to 20 bytes which is done by uint160 then into uint256 to be casted into bytes32 ```bytes32(uint256(uint160(funder)))```.
-58.	 ```forge coverage --report debug``` is syntax to get coverage report for each line in contract.
-59.	 Continue skips the current iteration while ``break`` stop the loop at current iteration.
-60.	
+55.	Events are stored using ``vm.recordLogs()`` syntax in foundry. After this all txn are made which emits event and are stored.
+56.	```Vm.Log[] memory event_Entries = vm.getRecordedLogs()``` is expression which is used for accessing all events.
+57.	 Events emitted are stored in 1st index of topic as 0th index stored the whole event expression.
+ 
+58.	 Events are stored in bytes32 type and all events must be casted to type bytes32 before validating any event emitted.
+59.	 Converting address into bytes32 require first them to be casted to 20 bytes which is done by uint160 then into uint256 to be casted into bytes32 ```bytes32(uint256(uint160(funder)))```.
+60.	 ```forge coverage --report debug``` is syntax to get coverage report for each line in contract.
+61.	 Continue skips the current iteration while ``break`` stop the loop at current iteration.
+62.	There are different method of making address in foundry.
+ 
+63.	The true return of ERC20 contract approve can cause ```expectRevert``` call to fail as it expect return value to be false.
+64.	Address are passed with datatype pointer in deployment script and not with casting. ContractType pointer needs to be passed with pointer and not with casting into Address type.
+ 
+65.	 Address of pointer to a contract type for a contract can be retrieve using ``.address`` syntax, e.g; ``contract.ContractTypePointer.address``.
+ 
+66.	 Caller can be checked of a function by returning ```msg.sender``` in contract function and caching in testing function.
+67.	 ```gasleft()``` is method for getting gas price for  txn. The formula is ```uint256 gasUsed = (Start_Gas - End_Gas) * tx.gasprice;``` where ```gasleft()``` is placed at start and end of txn.
+68.	 If low level call return value is not check reverting txn will pass.
+69.	 Foundry devops tool only get contracts that are deployed on chain and are in ```broadcast``` folder.
+70.	Contract should be deployed with ```vm.startBroadcast()``` to have them in ```broadcast``` folder.
+71.	 Persmission should be given with ```fs_permissions = [{ access = "read", path = "./broadcast" }]``` for correct functioning of devops.
+72.	
+ 
+ 
+# IPFS
+
+1.	Any file can be uploaded/import using IPFS desktop application.
+2.	```ipfs://``` is used on supported browser for read-only purpose.
+3.	
  
 # Auditing Checklist
 https://github.com/ComposableSecurity/SCSVS/tree/master
