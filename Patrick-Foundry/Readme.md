@@ -240,7 +240,30 @@
 
 1.	Any file can be uploaded/import using IPFS desktop application.
 2.	```ipfs://``` is used on supported browser for read-only purpose.
-3.	
+
+## Script to initialize a project of foundry
+
+```sh
+# 1st try this
+
+forge i foundry-rs/forge-std --no-commit
+
+# If above cmd fail install lib/forge-std
+forge init --force --no-commit
+
+
+# Install openzeppelin-contracts // same for any other dependencies  gitmodules
+# all installation will be on latest version if specific version is require use @v0.8.19
+
+forge i OpenZeppelin/openzeppelin-contracts --no-commit
+forge i OpenZeppelin/openzeppelin-contracts-upgradeable --no-commit
+
+# Run test
+forge t
+```
+
+
+
  
 # Auditing Checklist
 https://github.com/ComposableSecurity/SCSVS/tree/master
