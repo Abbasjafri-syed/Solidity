@@ -37,8 +37,8 @@
 35.	The keyword block.timestamp is constant as storage variable in contract but updated when called within a function.
 36.	To pass message in error function string keyword must be declared inside error thisError(string).
 37.	Modifiers are of 4 types i.e., visibility, state, custom and payable. Visibility is pvt, public, internal and external; state are view and pure; and custom are defined inside contracts. Payable modifier provides function with ability to receive ether.
-38.	 Ether can only be transfer to a payable address.
-39.	 Send and transfer are carried out using ( ) while call is done through call{value: msg.value}(" "); for transferring ether.
+38.	Ether can only be transfer to a payable address.
+39.	Send and transfer are carried out using ( ) while call is done through call{value: msg.value}(" "); for transferring ether.
 40.	call{value: msg.value}(" "); msg.value is the amount transfer while (" "); is checking return value. https://consensys.io/diligence/blog/2019/09/stop-using-soliditys-transfer-now/
 41.	.call( )  is prone to reentrancy and should be used with caution.
 42.	In solidity 0.8 and above transfer to caller is like this payable(msg.sender).transfer(address( this) .balance).
@@ -56,6 +56,9 @@
 54.	Safemath method can be instead of decrement or increment like instead maker++ use maker.add(1).
 55.	Natspec are comments with different  tags like author, dev, title, param, audit etc.
 56.	
+57.	 
+58.	
+ 
  
 # Patrick-Foundry - solidity
 
@@ -76,16 +79,10 @@
 15.	Data storage are defined for struct, arrays and string.
 16.	Same return type should be declared in returns in which data is stored i.e.; simpleContract myContract should return simpleContract;.
 17.	Chainlink price feed return 8 decimal which can be converted to 18 using the method...return uint256(price * 1e10).
- 
-
 18.	Chainlink latestRoundData returns 5 parameter of which second is taken i.e. price (, int256 price,,,).
 19.	Msg.value can be converted to token price in usd by formula: ```msg.value * latestrounddata / 1e18```.
- 
-
 20.	Token price in usd can be converted to msg.value using formula ```(amountInUSD * 1e18) / TokenPriceInUSD;
 21.	Amount difference can be calculated using above point formula.
- 
-
 22.	Multiple input can be added to array variable using loops.
 23.	arrVar = new array[](0); is the method to delete every index of array.
 24.	Value increment in mapping should be use with +=  i.e.; map[address] += uint;
@@ -96,9 +93,9 @@
 29.	Transfer and send have 2300 gas limit. Transfer throws error if txn need more than 2300 gas, Call fwd all the gas
 30.	Send and call method are low level calls which return bool value used to check for revert.
 31.	.call method is used to call function of contract `.call("")`.
-32.	 Receive and fallback functions are used to receive ether on contract. Fallback is called when no function with specific name exist and some data is sent with ether.
+32.	Receive and fallback functions are used to receive ether on contract. Fallback is called when no function with specific name exist and some data is sent with ether.
 33.	Libraries cannot be inherited. Libraries are used inside contract for specific data type i.e., ‘using library for uint’.
-34.	 When using a function of library inside a contract, its first parameter must be the data type for which it is used.
+34.	When using a function of library inside a contract, its first parameter must be the data type for which it is used.
 35.	dynamic datatypes (bytes, string or array) are not use with  calldata instead we use the memory keyword.
 36.	calldata is a read-only temporary memory location that holds the function arguments sent to the function by the caller (EOA or another smart contract). You cannot instantiate calldata in the contract.
 37.	Amount in wei * tokenPrice / 1e18 gets the token value in decimal[USD].
@@ -116,42 +113,34 @@
 49.	Default value of enum will be the 1st element.
 50.	Enums can be converted into uint by type casting them like uint256(enum.elementIndex);
 51.	Error can be revert with data by declaring data in them. “revert error_name(address, uint, bool)”.
-52.	Empty arguments can be passed for function if like    ``` function check_UpKeep(bytes memory /* check*/)``` and will be called in like ```check_UpKeep(“”)```.
+52.	52.	Empty arguments can be passed for function if like    ``` function check_UpKeep(bytes memory /* check*/)``` and will be called in like ```check_UpKeep(“”)```.
 53.	Values in struct can be passed simply as struct as well as using json key-pair value syntax.
 54.	Any type returns in a function must be returned in its type or casted to it type before returning,  e.g. returns (datatype memory) {return datatype()}.
 55.	Stack too deep error can occur if many local variables are used in a function. The solution is to divide them into two or more parts.
 56.	Vm.prank makes call to only one state changing function in a single txn but vm.startPrank can makes multiple calls.
- 
-
 57.	Event in foundry can be tested using ```expectEmit``` which takes upto 5 params after which event is emitted followed by actual txn that is emitting the event in the contract function.
- 
-
 58.	Events must be separately defined in the test contract with same name and parameters(datatypes).
 59.	ERC-677 are upgradeable version and erc-777 as they are backward compatible erc-20.
 60.	If a contract is inherited (and have a constructor), it constructor can be passed as a modifier with the parent contract constructor.
- 
 61.	An account can receive ERC20 token even if it does not have ```receive``` or ```fallback``` function.
 62.	ERC20 contract ```approve``` function returns true even if an address does not have ERC20 tokens and call the approve function.
 63.	```transfer``` and ```send``` method will revert if receive and fallback function have any logic in it. This is due to 2300 gas limitation on these functions.
 64.	``call`` method is low-level function which is called only by functions and not contractTypes. It returns bool and data.
- 
 65.	Eth fund can be withdraw from contract through low level call even if there is no withdraw function in the contract.
-66.	Integers cannot be directly converted to strings it requires OZ’s string lib and ```.toString``` syntax.
-67.	Abi.encode is used to convert a data type into bytes.
+66.	Integers cannot be directly converted to strings it requires OZ’s string lib and ```Strings.toString(tokenID)``` syntax.
+67.	If multiple strings are required to concatenate they must be encode and then casted to string before concatenation.
+68.	Abi.encode/encodePacked is used to convert a data type into bytes. Abi.decode is used to convert bytes into its original datatype.
+69.	Integers conversion to bytes required first casting to its type ```uint16 or uint256``` then ```abi.encodePacked``` method is used.
  
 
-68.	Abi.decode is used to convert bytes into its original datatype.
- 
-69.	If multiple strings are required to concatenate they can be must be encode and then casted to string before concatenation.
+70.	Abi.decode is used to bytes into its original datatype, by explicitly defining datatype as 2nd argument.
  
 
-70.	
-71.	
-
-
-
-
-
+71.	Library should be declared for data types they are used for ```using Strings for uint256```, Strings library of OZ is used for uint data type.
+72.	Base64 data can be converted only when datatype is of ```bytes```.
+73.	Integer can be changed to enum value by casting ```enum(integer)```.
+74.	 All elements in enum elements can be retrieved using ```uint(type(enum).max)```.
+75.	
 
  
 # Foundry-test
@@ -171,70 +160,66 @@
 12.	To deploy contract onchain `forge script script/contract --rpc-url –broadcast –private-key` is the CL using script. 
 13.	Create method to deploy contract onchain is linked to forge Contractname --rpc-url –broadcast –private-key` `` option.
 14.	Adding variables in .env file shouldn’t have gap b/w var name and values like `varName=0x512`
-15.	 `source .env` is means to add .env into source file.
-16.	  To call value from .env file they should be with `$` sign without any gap in between.
-17.	 Broadcast is only used with script and not with create method. It requires pvtkey for wallet
+15.	`source .env` is means to add .env into source file.
+16.	To call value from .env file they should be with `$` sign without any gap in between.
+17.	Broadcast is only used with script and not with create method. It requires pvtkey for wallet
 18.	–rpc-url is means to deploy on chain..in script deployment does not need pvt key with rpc but with create it need –private-key as well.
-19.	 Forge clean remove the `out` folder.
-20.	 `Cast to-base` is method to convert values.
-21.	 Cast is also used to interact with a deployed contract using CL `cast send contractAddress ‘’functionName(uint param)’’ args123
+19.	Forge clean remove the `out` folder.
+20.	`Cast to-base` is method to convert values.
+21.	Cast is also used to interact with a deployed contract using CL `cast send contractAddress ‘’functionName(uint param)’’ args123
 22.	Cast call can be made to check on result for a write function as a static call.
-23.	  `cast call contractAddress "func(argumentuint256)" --rpc-url ` is the syntax to use for making call on-chain.
-24.	 ‘vm’ cheat code ignore the next line if also the ‘vm’ is present.
+23.	`cast call contractAddress "func(argumentuint256)" --rpc-url ` is the syntax to use for making call on-chain.
+24.	‘vm’ cheat code ignore the next line if also the ‘vm’ is present.
 25.	Vm.prank(caller) method is used to initiate txn with specific addres instead of msg.sender or address (this).
 26.	Vm.deal(caller, 1 ether)  is used to fund the contract with required amount.
 27.	hoax(caller, 1 ether)  is combination of both prank and deal.
 28.	If an amount is to be sent for a payable contract it is called like a low level call. i.e.; contract.function{value: amount}();
 29.	–f is short form of –fork-url and doesn’t work with local host...only with testnet or mainnet.
-30.	Calling elements of array in test are done by caching them in array and calling each element separately (address[] memory fuser = (funded.getFunders());assertEq(fuser[0], caller));)or through loop.
+30.	Calling elements of array in test are done by caching them in array and calling each element separately (address[] memory fuser = (funded.getFunders());assertEq(fuser[0], caller));) or through loop.
 31.	Testing needs to be developed around 3 A’s i.e. Arrange, Act and Assert.
 32.	Arrange is setting all parameters and initial state of all variables...Act is calling the contract or method in contract...assert is validating state changes taken place in Act.
 33.	Branching tree Technique or BTT is method for organising unit testing based on state changing taken place at each step.
 34.	BTT starts with default behaviour of contract and then modifier are created and added before each state changing.
-35.	 Vm.warp() is the cheat code to create a time difference between two txns. By default it is 1 i.e., vm.warp(block.timestamp) is 1.
-36.	 Receive and fallback is must for contract receiving native token...payable function does not provide contract with ability to receive ether.
-37.	 Contract abi can be generated through cmd “forge inspect ContractName abi”. Internal/pvt functions abi are not generated.
+35.	Vm.warp() is the cheat code to create a time difference between two txns. By default it is 1 i.e., vm.warp(block.timestamp) is 1.
+36.	Receive and fallback is must for contract receiving native token...payable function does not provide contract with ability to receive ether.
+37.	Contract abi can be generated through cmd “forge inspect ContractName abi”. Internal/pvt functions abi are not generated.
 38.	Contract abi can be convert back to interface using cmd “cast interface src/contract.sol” .
-39.	 Foundry default time is 1 if using ```block.timestamp```. can be changes using ```vm.warp(129)``` returns current time ==129.
+39.	Foundry default time is 1 if using ```block.timestamp```. can be changes using ```vm.warp(129)``` returns current time ==129.
 40.	Value in scientific notation can be returned in console by using ```%e``` syntax, e.g.; ```console.log(‘This is one ether %e:’, 1 ether )```.
 41.	Vm.startbroadcast is used to deploy a contract within a function.
-42.	 Vm.startbroadcast makes foundry default sender as owner which can be changed accordingly i.e., ``` Vm.startbroadcast(user)```.
+42.	Vm.startbroadcast makes foundry default sender as owner which can be changed accordingly i.e., ``` Vm.startbroadcast(user)```.
 43.	Passing values in variables from a function or struct from a inherited contract must have parenthese”()” else it allows only 1 parameter to be passed.
-44.	 assertEq() only checks for specific data types which requires casting to the needed type first.
+44.	assertEq() only checks for specific data types which requires casting to the needed type first.
 45.	Vm.expectRevert(‘custom error string’) custom error message should be passed as same define in the code.
 46.	Vm.expectRevert(contractType.customError.selector) is used when custom error is used for revert in contract having no parameters.
 47.	Vm.expectRevert(abi.encodewithSelector(contractType.customError.selector, param1, param2, ...) is used when custom error have parameters in it .
-48.	  expectRevert with custom error and arguments only allows 3 params.
-49.	 Custom error shows message for the reason a txn fails, while empty ```revert()``` shows ```EvmError: Revert```.
-50.	 Events are required to be separately defined in test contract. 
+48.	expectRevert with custom error and arguments only allows 3 params.
+49.	Custom error shows message for the reason a txn fails, while empty ```revert()``` shows ```EvmError: Revert```.
+50.	Events are required to be separately defined in test contract. 
 51.	```vm.expectEmit(true, false, false, false, address(emitter))``` takes max of 5 args...1st 4 are bool, last one is emitting contract address.  1st argument must be true to pass the test or pass empty parentheses for default check.
-52.	 If no args are passed in ```vm.expectEmit()``` first topic is true by default.
-53.	 If only address is passed in last parameter ```vm.expectEmit(address(emitter))```  it checks the emitter of the event which is the contract.
+52.	If no args are passed in ```vm.expectEmit()``` first topic is true by default.
+53.	If only address is passed in last parameter ```vm.expectEmit(address(emitter))```  it checks the emitter of the event which is the contract.
 54.	Events parameter if is an address it should be indexed, as only topics are checked.
- 
 55.	Events are stored using ``vm.recordLogs()`` syntax in foundry. After this all txn are made which emits event and are stored.
 56.	```Vm.Log[] memory event_Entries = vm.getRecordedLogs()``` is expression which is used for accessing all events.
-57.	 Events emitted are stored in 1st index of topic as 0th index stored the whole event expression.
- 
-58.	 Events are stored in bytes32 type and all events must be casted to type bytes32 before validating any event emitted.
-59.	 Converting address into bytes32 require first them to be casted to 20 bytes which is done by uint160 then into uint256 to be casted into bytes32 ```bytes32(uint256(uint160(funder)))```.
-60.	 ```forge coverage --report debug``` is syntax to get coverage report for each line in contract.
-61.	 Continue skips the current iteration while ``break`` stop the loop at current iteration.
+57.	Events emitted are stored in 1st index of topic as 0th index stored the whole event expression.
+58.	Events are stored in bytes32 type and all events must be casted to type bytes32 before validating any event emitted.
+59.	Converting address into bytes32 require first them to be casted to 20 bytes which is done by uint160 then into uint256 to be casted into bytes32 ```bytes32(uint256(uint160(funder)))```.
+60.	```forge coverage --report debug``` is syntax to get coverage report for each line in contract.
+61.	Continue skips the current iteration while ``break`` stop the loop at current iteration.
 62.	There are different method of making address in foundry.
- 
 63.	The true return of ERC20 contract approve can cause ```expectRevert``` call to fail as it expect return value to be false.
 64.	Address are passed with datatype pointer in deployment script and not with casting. ContractType pointer needs to be passed with pointer and not with casting into Address type.
- 
-65.	 Address of pointer to a contract type for a contract can be retrieve using ``.address`` syntax, e.g; ``contract.ContractTypePointer.address``.
- 
-66.	 Caller can be checked of a function by returning ```msg.sender``` in contract function and caching in testing function.
-67.	 ```gasleft()``` is method for getting gas price for  txn. The formula is ```uint256 gasUsed = (Start_Gas - End_Gas) * tx.gasprice;``` where ```gasleft()``` is placed at start and end of txn.
-68.	 If low level call return value is not check reverting txn will pass.
-69.	 Foundry devops tool only get contracts that are deployed on chain and are in ```broadcast``` folder.
+65.	Address of pointer to a contract type for a contract can be retrieve using ``.address`` syntax, e.g; ``contract.ContractTypePointer.address``.
+66.	Caller can be checked of a function by returning ```msg.sender``` in contract function and caching in testing function.
+67.	```gasleft()``` is method for getting gas price for  txn. The formula is ```uint256 gasUsed = (Start_Gas - End_Gas) * tx.gasprice;``` where ```gasleft()``` is placed at start and end of txn.
+68.	If low level call return value is not check reverting txn will pass.
+69.	Foundry devops tool only get contracts that are deployed on chain and are in ```broadcast``` folder.
 70.	Contract should be deployed with ```vm.startBroadcast()``` to have them in ```broadcast``` folder.
-71.	 Persmission should be given with ```fs_permissions = [{ access = "read", path = "./broadcast" }]``` for correct functioning of devops.
-72.	
- 
+71.	Persmission should be given with ```fs_permissions = [{ access = "read", path = "./broadcast" }]``` for correct functioning of devops.
+72.	```vm.readFile(path)``` is foundry cheatcode use to access data of other files.
+73.	 
+ 
  
 # IPFS
 
@@ -248,12 +233,13 @@
 
 forge i foundry-rs/forge-std --no-commit
 
+
+
 # If above cmd fail install lib/forge-std
 forge init --force --no-commit
 
-
-# Install openzeppelin-contracts // same for any other dependencies  gitmodules
-# all installation will be on latest version if specific version is require use @v0.8.19
+# Install openzeppelin-contracts  gitmodules// same for any other dependencies 
+# all installation will be on latest version if specific version is require use @v4.9.4
 
 forge i OpenZeppelin/openzeppelin-contracts --no-commit
 forge i OpenZeppelin/openzeppelin-contracts-upgradeable --no-commit
@@ -261,15 +247,9 @@ forge i OpenZeppelin/openzeppelin-contracts-upgradeable --no-commit
 # Run test
 forge t
 ```
-
-
-
  
 # Auditing Checklist
+
 https://github.com/ComposableSecurity/SCSVS/tree/master
 https://gist.github.com/Abbasjafri-syed/773bef4cd2d199dc083221127c43684e
 https://lab.guardianaudits.com/encyclopedia-of-solidity-attack-vectors/block.timestamp-manipulation
-
-
-
-
