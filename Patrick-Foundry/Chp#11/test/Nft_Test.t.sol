@@ -5,9 +5,11 @@ import {ERCNFT} from "../src/NftToken.sol";
 import {NFT721Deploy} from "../script/Nft_Deploy.s.sol";
 import {RecentNft} from "../script/interactions.s.sol";
 import {console, Test} from "forge-std/Test.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {Strings} from "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
 contract NFT721Test is Test {
+    using Strings for uint256; // declaring using lib for integer
+
     ERCNFT NFT_ERC; // pointer towards NFT contract
     NFT721Deploy NFT_Deployer; // pointer for Script contract
     RecentNft recent; // latest deployed contract
@@ -23,31 +25,32 @@ contract NFT721Test is Test {
 
     // forge t --mt test_amount -vv
     function test_amount() external {
-        hoax(funder, 10 ether);
-        NFT_ERC.multiple_mint{value: 1 ether}();
+        hoax(funder, 1.008 ether);
+        NFT_ERC.multiple_mint{value: 1.008 ether}();
         uint256 Nft_Count = NFT_ERC.get_Total_NFTOwned(funder);
         console.log("Owner Nft_Count:", Nft_Count);
+        console.log("Owner balace: %e", funder.balance);
     }
 
     // forge t --mt test_concat -vv
-    function test_concat() external {
+    function test_concat() external view {
         string memory maker = string.concat("maker is:", "funder", "causing call");
         console.log(maker);
     }
 
     // forge t --mt test_fuzzbit -vv
-    function test_fuzzbit(address a, address b) external {
+    function test_fuzzbit(address a, address b) external view {
         // address owner = makeAddr("owner");
         // address account = makeAddr("account");
         uint256 bitMask = 1 << (uint160(a) ^ uint160(b));
         if (bitMask == 0) {
-        bitMask = 1 << 1;
-    }
+            bitMask = 1 << 1;
+        }
         console.log("bitMask:", bitMask);
     }
 
     // forge t --mt test_recentHolder -f $rpc_url -vv
-    function test_recentHolder() external {
+    function test_recentHolder() external view {
         console.log("Owner Address:", NFT_ERC.owner());
         console.log("RecentNft Address:", address(recent));
     }
@@ -97,6 +100,7 @@ contract NFT721Test is Test {
 
     receive() external payable {}
 
+    // fails when this contract is receiveable
     function test_nonReceiveableSenderThis() external {
         hoax(address(this), 10 ether); // funding and pranking with user
 
@@ -108,6 +112,7 @@ contract NFT721Test is Test {
         assertEq(address(this).balance, 10 ether); // validating test contract balance
     } // forge t --mt test_nonReceiveableSender -vv
 
+    // fails when this contract is non-receiveable
     function test_ReceiveableSenderThis() external {
         hoax(address(this), 10 ether); // funding and pranking with user
 
@@ -122,10 +127,10 @@ contract NFT721Test is Test {
 
     // method to attach integer with string
     function test_stringConcatBytes() external view {
-        uint256 token_Id = 522;
-        bytes memory tokenIdUint = abi.encodePacked(token_Id); // converting uint into bytes
-        string memory Nft_Bytes = NFT_ERC.Nft_BytesURI((tokenIdUint)); // calling function and caching return value
+        uint256 token_Id = 122;
+        bytes memory tokenIdUint = (abi.encodePacked(token_Id)); // converting uint into bytes
         console.logBytes(tokenIdUint); // method to log bytes data type
+        string memory Nft_Bytes = NFT_ERC.Nft_BytesURI((tokenIdUint)); // calling function and caching return value
         console.log("NFT Storgae location:", Nft_Bytes);
     } // forge t --mt test_stringConcatBytes -vv
 
@@ -135,9 +140,17 @@ contract NFT721Test is Test {
     } // forge t --mt test_concatString -vv
 
     function test_convertString() external view {
-        string memory tokenIdStr = Strings.toString(423); // method to convert integer into string
+        string memory tokenIdStr = Strings.toString(uint256(423)); // method to convert integer into string
         string memory concate = string( // casting to string for concatenation
         abi.encodePacked("ipfs://QmNf1UsmdGaMbpatQ6toXSkzDpizaGmC9zfunCyoz1enD5/penguin/", tokenIdStr, ".png"));
         console.log("NFT IPFS location:", concate);
     } // forge t --mt test_convertString -vv
+
+    // forge t --mt test_packed -vv
+    function test_packed() external {
+        uint16 token_Id = 122;
+        bytes memory tokenId = (abi.encode(token_Id)); // converting uint into bytes
+        uint16 tokenIdUint = abi.decode(tokenId, (uint16)); // decoding bytes data into integer type
+        console.log("tokenIdUint:", tokenIdUint);
+    }
 }

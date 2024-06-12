@@ -13,7 +13,7 @@ contract ERCNFT is ERC721, Ownable {
     error NFTAmountLess(uint256 Amount); // custom error to logged with reverting amount
     error TransferFailed(uint256 transferred_Amount);
 
-    constructor() ERC721("MyNFT", "Manto") Ownable(msg.sender) {
+    constructor() ERC721("MyNFT", "Manto") Ownable() {
         mint_Nft(); // calling mint function to have 1st nft to owner
     }
 
@@ -39,9 +39,16 @@ contract ERCNFT is ERC721, Ownable {
     function multiple_mint() public payable {
         require(msg.value >= 0.01 ether, "At least 0.01 eth required"); // defining threshold
         uint256 NFT_Price = msg.value / 0.01 ether; // define price 100 nft per ether
+        uint256 Nft_minted_amount = NFT_Price * 0.01 ether; // total amount of nft mInted
+        uint256 amount_refunded = msg.value - Nft_minted_amount; // caching amohnt to be refunded
         for (uint256 i; i < NFT_Price; ++i) {
             // running loop for price
             mint_Nft(); // minting NFt till condition is true
+        }
+        if (amount_refunded > 0) {
+            // if amount is greater than zero carry out transfer
+            (bool success,) = msg.sender.call{value: amount_refunded}(""); // making transfer through low level call
+            require(success, "transfer failed"); // checking retrun value
         }
     }
 
@@ -76,6 +83,7 @@ contract ERCNFT is ERC721, Ownable {
         string memory tokenIdStr = Strings.toString(tokenIdUint); // converting integer to string
         string memory concate = string( // casting value with encoded data
         abi.encodePacked("ipfs://QmNf1UsmdGaMbpatQ6toXSkzDpizaGmC9zfunCyoz1enD5/penguin/", tokenIdStr, ".png"));
+        // string memory concate =  string.concat("ipfs://QmNf1UsmdGaMbpatQ6toXSkzDpizaGmC9zfunCyoz1enD5/penguin/", tokenIdStr, ".png");// same as above
         return concate;
     }
 }
