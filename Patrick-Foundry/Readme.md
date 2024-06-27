@@ -55,9 +55,6 @@
 53.	require  refund the rest of gas when a function fails, whereas assert not.
 54.	Safemath method can be instead of decrement or increment like instead maker++ use maker.add(1).
 55.	Natspec are comments with different  tags like author, dev, title, param, audit etc.
-56.	
-57.	 
-58.	
  
  
 # Patrick-Foundry - solidity
@@ -213,12 +210,14 @@
 65.	Address of pointer to a contract type for a contract can be retrieve using ``.address`` syntax, e.g; ``contract.ContractTypePointer.address``.
 66.	Caller can be checked of a function by returning ```msg.sender``` in contract function and caching in testing function.
 67.	```gasleft()``` is method for getting gas price for  txn. The formula is ```uint256 gasUsed = (Start_Gas - End_Gas) * tx.gasprice;``` where ```gasleft()``` is placed at start and end of txn.
-68.	If low level call return value is not check reverting txn will pass.
-69.	Foundry devops tool only get contracts that are deployed on chain and are in ```broadcast``` folder.
-70.	Contract should be deployed with ```vm.startBroadcast()``` to have them in ```broadcast``` folder.
-71.	Persmission should be given with ```fs_permissions = [{ access = "read", path = "./broadcast" }]``` for correct functioning of devops.
-72.	```vm.readFile(path)``` is foundry cheatcode use to access data of other files.
-73.	 
+68.	Gas price in eth can be calculated depend on price of Gwei, i.e., formula ```(190000(gas consumed) * 10 Gwei(depends on network activity) *1e9) / 1e18 = 0.0019 ETH(gas price)```.
+69.	If low level call return value is not check reverting txn will pass.
+70.	Foundry devops tool only get contracts that are deployed on chain and are in ```broadcast``` folder.
+71.	Contract should be deployed with ```vm.startBroadcast()``` to have them in ```broadcast``` folder.
+72.	Persmission should be given with ```fs_permissions = [{ access = "read", path = "./broadcast" }]``` for correct functioning of devops.
+73.	```vm.readFile(path)``` is foundry cheatcode use to access data of other files.
+74.	 Test tokens on Sepolia https://blog.sui.io/sui-bridge-live-on-testnet-with-incentives/
+75.	
  
  
 # IPFS
@@ -232,7 +231,6 @@
 # 1st try this
 
 forge i foundry-rs/forge-std --no-commit
-
 
 
 # If above cmd fail install lib/forge-std
