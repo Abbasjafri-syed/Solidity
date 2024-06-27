@@ -19,13 +19,43 @@ contract NFT721Test is Test {
     }
 
     // forge t --mt test_NFTinit -vvv
-    function test_NFTinit() internal {
+    function test_NFTinit() public {
         hoax(funder, 10 ether); // prank and funding user
         dyno_Nft.minter_Nft{value: 0.108 ether}(); // calling function with sending funds
 
         uint256 maker = dyno_Nft.get_NftCount(funder); // counting nft owned by user
         // console.log("Owned NFT balance: ", maker);
-        vm.assertEq(maker, 10, "Value not match"); //aseerting total owned
+        vm.assertEq(maker, 10, "Value not match"); //asserting total owned
+    }
+
+    // forge t --mt test_fib -vvv
+    function test_fib() external view {
+        dyno_Nft.fibonacci(10);
+    }
+
+    // forge t --mt test_getW -vvv
+    function test_getW() internal {
+        test_NFTinit(); // calling init function
+        // uint countNft = uint256(dyno_Nft.get_IDNft() - 1);
+
+        uint256[] memory nftsArray = dyno_Nft.get_NFTsByWeather(dyno_Nft.get_IDNft(), 0); // getting all ids
+        for (uint256 i = 0; i < nftsArray.length; i++) {
+            console.log("nftsArray no:", nftsArray[i]);
+        }
+    }
+
+    // forge t --mt test_setWeth -vvv
+    function test_setWeth() external {
+        test_getW(); // calling test_getW function
+
+        vm.prank(funder); // start call with funder
+        dyno_Nft.allocateWeather{value: 0.008 ether}(7, 1); // call functtion to change wetaher
+
+        uint256[] memory nftsArray = dyno_Nft.get_NFTsByWeather(dyno_Nft.get_IDNft(), 1); // getting all ids with id
+
+        for (uint256 i = 0; i < nftsArray.length; i++) {
+            console.log("nftsArray no:", nftsArray[i]); // running loop to print all nfts with specific weather
+        }
     }
 
     // forge t --mt test_weatherSet -vvv
@@ -34,7 +64,7 @@ contract NFT721Test is Test {
 
         vm.startPrank(funder); // starting call with user
         string memory tokenURI = dyno_Nft.get_tokenURI(9); // caching token uri
-        console.log('tokenURI:\n', tokenURI); // logging token URI
+        console.log("tokenURI:\n", tokenURI); // logging token URI
 
         uint256 Weath = dyno_Nft.get_NftWeather(9); // getting uri of requried nft
         vm.assertEq(Weath, uint256(DynamicNFT.Weather.sunny)); // asserting value of nft equal to sunny
@@ -45,7 +75,7 @@ contract NFT721Test is Test {
         dyno_Nft.set_Weather{value: 0.001 ether}(9, 1); // calling function to change value
         Weath = dyno_Nft.get_NftWeather(9); // getting uri of requried nft
         console.log("NFT Weather", Weath); // logging token URI
-        // Weath = dyno_Nft.get_NftWeather(9);// getting URI of requried nft
+
         vm.assertEq(Weath, uint256(DynamicNFT.Weather.rainny)); // asserting value of nft equal to sunny
 
         tokenURI = dyno_Nft.get_tokenURI(9); // caching token uri
@@ -55,7 +85,7 @@ contract NFT721Test is Test {
     // forge t --mt test_flipper -vvv
     function test_flipper() external {
         test_NFTinit(); // calling init function
-        dyno_Nft.get_Weath(9);  // getting 
+        dyno_Nft.get_Weath(9); // getting
     }
 
     // forge t --mt test_Nftmint -vvv

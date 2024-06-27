@@ -45,11 +45,49 @@ contract DynamicNFT is ERC721, Ownable {
             amount_refunded = msg.value - Nft_minted_amount; // caching amohnt to be refunded
         }
         _;
+        // if amount is greater than zero carry out transfer
         if (amount_refunded > 0) {
-            // if amount is greater than zero carry out transfer
             (bool success,) = msg.sender.call{value: amount_refunded}(""); // making transfer through low level call
             require(success, "transfer failed"); // checking retrun value
         }
+    }
+
+    function allocateWeather(uint256 token, uint256 wether_Id) external payable {
+        require(msg.value >= ChangePrice, "Amount is less than Threshold");
+        require(_isApprovedOrOwner(msg.sender, token)); // check if sender is owner or spender
+        require(wether_Id <= uint256(type(Weather).max), "Weather not Exists"); // check if send is owner or spender
+
+        if (Nft_Weather[token] == Weather(wether_Id)) revert Weather_AlreadyExist(wether_Id); // reverting if weather already existed
+            // checking if excess funds are send
+        if (msg.value > ChangePrice) {
+            refund_FlipAmount(msg.value); // If amount is excess refund function is called
+        }
+        Nft_Weather[token] = Weather(wether_Id); // allocating weather to specific id
+    }
+
+    function get_NFTWeather(uint256 NftId) external view returns (Weather) {
+        return Nft_Weather[NftId]; // returning weather of NFT
+    }
+
+    function get_NFTsByWeather(uint256 NftCount, uint256 weatherId) external view returns (uint256[] memory) {
+        uint256[] memory Nfts = new uint256[](NftCount); // Initialize with expected size
+        uint256 Nft_Found; // Counter for actual number of NFTs matching the weather
+
+        for (uint256 i; i < NftCount; ++i) {
+            // Check if the NFT matches the specified weather
+            if (Nft_Weather[i] == Weather(weatherId)) {
+                Nfts[Nft_Found] = i; // Add the NFT ID to the array
+                Nft_Found++; // Increment the counter
+            }
+        }
+
+        // Create a new array with the actual number of NFTs found
+        uint256[] memory result = new uint256[](Nft_Found); // defining limit of array for all nfts identified
+        for (uint256 j; j < Nft_Found; ++j) {
+            // running loop
+            result[j] = Nfts[j]; // assigning nfts to array
+        }
+        return result; // Return the array with actual NFT IDs
     }
 
     function minter_Nft() external payable pay_Amount {
@@ -70,17 +108,19 @@ contract DynamicNFT is ERC721, Ownable {
 
     function set_Weather(uint256 tokenId, uint256 weather_Flip) external payable {
         require(_isApprovedOrOwner(msg.sender, tokenId)); // check if send is owner or spender
+        require(weather_Flip <= uint256(type(Weather).max), "Weather not Exists"); // check if send is owner or spender
+
         require(msg.value >= ChangePrice, "Amount is less than Threshold");
+        // checking if excess funds are send
         if (msg.value > ChangePrice) {
-            // checking if excess funds are send
             refund_FlipAmount(msg.value); //  if amount is excess refund function is called
         }
+        // checking if weather already exists
         if (weather_Flip == uint256(Nft_Weather[tokenId])) {
-            // checking if weather already exists
             revert Weather_AlreadyExist(weather_Flip); // reverting if weather already existed
         }
 
-        Nft_Weather[tokenId] = Weather(weather_Flip); // passing value to token id 
+        Nft_Weather[tokenId] = Weather(weather_Flip); // passing value to token id
     }
 
     function get_tokenURI(uint256 tkn_Id) external view returns (string memory tkn_URI) {
@@ -97,16 +137,14 @@ contract DynamicNFT is ERC721, Ownable {
                 baseUri,
                 (
                     Base64.encode( // encoding data into base 64
-                        bytes(
-                            abi.encodePacked( // encoding all types of data
-                                '{ "Name":',
-                                name(),
-                                ' "Description": "Nft representing changing weather Pattern", "Token_Id": ',
-                                Strings.toString(tkn_Id), // changing token id to string
-                                '\n "ImageURI": \n',
-                                active_Img, // getting active SVG
-                                "\n}"
-                            )
+                        abi.encodePacked( // encoding all types of data
+                            '{ "Name":',
+                            name(),
+                            ' "Description": "Nft representing changing weather Pattern", "Token_Id": ',
+                            Strings.toString(tkn_Id), // changing token id to string
+                            '\n "ImageURI": \n',
+                            active_Img, // getting active SVG
+                            "\n}"
                         )
                     )
                 )
@@ -130,16 +168,14 @@ contract DynamicNFT is ERC721, Ownable {
             abi.encodePacked(
                 token_BaseUri,
                 Base64.encode(
-                    bytes(
-                        abi.encodePacked(
-                            '{"Name": ',
-                            name(),
-                            ', "Description":, "Nft representing changing weather Pattern", "Token_Id": ',
-                            Strings.toString(tokenId),
-                            ', \n "Image Uri": \n',
-                            Svg_Cloudy_Sun,
-                            "\n}"
-                        )
+                    abi.encodePacked(
+                        '{"Name": ',
+                        name(),
+                        ', "Description":, "Nft representing changing weather Pattern", "Token_Id": ',
+                        Strings.toString(tokenId),
+                        ', \n "Image Uri": \n',
+                        Svg_Cloudy_Sun,
+                        "\n}"
                     )
                 )
             )
@@ -165,5 +201,22 @@ contract DynamicNFT is ERC721, Ownable {
 
     function get_IDNft() external view returns (uint256) {
         return token_ID; // total number of id minted -1
+    }
+
+    // function to create fibonacci series
+    function fibonacci(uint256 count) public pure returns (uint256[] memory) {
+        require(count > 0, "Count must be greater than 0"); //sanity check for input
+
+        uint256[] memory series = new uint256[](count); // creating array having length equal to input
+        series[0] = 0; // saving first value
+        if (count == 1) return series; // if valueis 1 return
+
+        series[1] = 1; // saving value of second element
+        for (uint256 i = 2; i < count; ++i) {
+            // statrting loop from 3rd index
+            series[i] = series[i - 1] + series[i - 2]; // caching value of last and secodn last index of loop element
+        }
+
+        return series; // returning series array
     }
 }
