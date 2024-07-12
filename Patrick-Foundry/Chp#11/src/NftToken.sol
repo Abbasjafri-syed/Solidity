@@ -4,8 +4,9 @@ pragma solidity ^0.8.19;
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {dataString} from "../src/returnData.sol";
 
-contract ERCNFT is ERC721, Ownable {
+contract ERCNFT is dataString, ERC721, Ownable {
     uint256 public ID_Count; // id count for every NFT
     mapping(address NFT_Owner => uint256 Nft_Owned) private Nft_Count; // mapping to know Nft owned by an address
     mapping(uint256 NFT_ID => address NFT_Owner) private Nft_Owner; // mapping to know Nft Owner by an address
@@ -15,6 +16,15 @@ contract ERCNFT is ERC721, Ownable {
 
     constructor() ERC721("MyNFT", "Manto") Ownable() {
         mint_Nft(); // calling mint function to have 1st nft to owner
+    }
+
+    function refund(uint256 Token_Amount) internal {
+        uint256 amountRefund = Token_Amount - 0.01 ether; // caching amount if excess
+        (bool success,) = msg.sender.call{value: amountRefund}(""); // transferring back additional amount
+        if (!success) {
+            revert TransferFailed(Token_Amount); // reverting with value
+        }
+        mint_Nft(); // calling mint function
     }
 
     receive() external payable {
@@ -29,11 +39,12 @@ contract ERCNFT is ERC721, Ownable {
         }
     }
 
-    function mint_Nft() public {
+    function mint_Nft() public returns (bytes memory) {
         Nft_Count[msg.sender]++; // incrementing number of NFT owned
         Nft_Owner[ID_Count] = msg.sender; // NFT owned by holder
         _mint(msg.sender, ID_Count); // minting first NFT
         ID_Count++; // increment the count
+        return abi.encode(dataString.return_Data); // return data
     }
 
     function multiple_mint() public payable {
@@ -50,15 +61,6 @@ contract ERCNFT is ERC721, Ownable {
             (bool success,) = msg.sender.call{value: amount_refunded}(""); // making transfer through low level call
             require(success, "transfer failed"); // checking retrun value
         }
-    }
-
-    function refund(uint256 Token_Amount) internal {
-        uint256 amountRefund = Token_Amount - 0.01 ether; // caching amount if excess
-        (bool success,) = msg.sender.call{value: amountRefund}(""); // transferring back additional amount
-        if (!success) {
-            revert TransferFailed(Token_Amount); // reverting with value
-        }
-        mint_Nft(); // calling mint function
     }
 
     function get_NFTOwner(uint256 NFT_TokenID) external view returns (address) {

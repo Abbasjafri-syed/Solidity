@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: None
 pragma solidity ^0.8.19;
 
-import {DynoNFTDeploy} from "../script/dynoNft_Deploy.s.sol";
+import {NFTDeployDyno as makerDyno} from "../script/dynoNft_Deploy.s.sol";
 import {DynamicNFT} from "../src/Dynam_Nft.sol";
 
 import {console, Test} from "forge-std/Test.sol";
 
 contract NFT721Test is Test {
     address funder = makeAddr("funder"); // random user creation
-    DynoNFTDeploy Nft_Deploy; // pointer to deployment script
+    makerDyno Nft_Deploy; // pointer to deployment script
     DynamicNFT dyno_Nft; // pointer to contract testing
 
     error Weather_AlreadyExist(uint256 value); // error of price
 
     function setUp() public {
-        Nft_Deploy = new DynoNFTDeploy(); // deploying through script
+        Nft_Deploy = new makerDyno(); // deploying through script
         dyno_Nft = Nft_Deploy.run();
     }
 
@@ -26,6 +26,10 @@ contract NFT721Test is Test {
         uint256 maker = dyno_Nft.get_NftCount(funder); // counting nft owned by user
         // console.log("Owned NFT balance: ", maker);
         vm.assertEq(maker, 10, "Value not match"); //asserting total owned
+
+        address Owner = dyno_Nft.get_NftOwner(2);
+        console.log("Owner:", Owner);
+        console.log("funder:", funder);
     }
 
     // forge t --mt test_fib -vvv
