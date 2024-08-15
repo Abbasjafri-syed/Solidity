@@ -162,15 +162,22 @@
 83.	Function selector can be generated using cmd ```this.functionName.selector``` this only works for function having external or public visibility.
  
 84.	Function signature is function name along with its parameters types e.g: "transferFrom(address, address, uint)".
-85.	Function signature can be generated from function selector using foundry cast command e.g: cast 4byte functionselectorbyte.
+85.	Low level call can be made using function signature with method ``abi.encodeWithSignature(functionsignature, param)``.
  
 
-86.	Difference between calldata and memory is based on type of call made. Memory is call made from inside the contract and calldata is made from outside the contract.
-87.	```Bytes.length``` is method to get data size of bytes.
-88.	```Bytes``` is dynamic data which is used to save or return data without any limit.
-89.	
-90.	
+86.	Function signature can be generated from function selector using foundry cast command e.g: cast 4byte functionselectorbyte.
+ 
 
+87.	Function selector can also be used to make low level calls with method ``abi.encodeWithSelector(functionselector, param)``.
+ 
+
+88.	Difference between calldata and memory is based on type of call made. Memory is call made from inside the contract and calldata is made from outside the contract.
+89.	```Bytes.length``` is method to get data size of bytes.
+90.	```Bytes``` is dynamic data which is used to save or return data without any limit.
+91.	Reverse loop have condition in reversed form with length starting from length of loop and run till condition is greater than 0 and decrement for i. The index taken is (i-1) inside loop code.
+ 
+
+92.	
 
 
 
@@ -256,6 +263,67 @@
 75.	
  
  
+# EVM Bytecode- Solidity
+
+1)	Smart contract bytescode can be generated in remix compile tab on ‘Compilations Details` tab under bytecode object.
+2)	Solidity/EVM version and optimization settings have direct impact on contract bytecode.
+3)	Activating debugger in remix gives details in instructions section.
+ 
+
+4)	Every instruction have an opcode to execute. EVM identifies specifics opcodes with particular action.
+ 
+5)	EVM opcode reference https://www.evm.codes/
+6)	Codes executes from top down order with changing location around with ```JUMP``` opcode.
+7)	```JUMP``` opcode takes the most top value of stack and move to target location.
+8)	The target location of ```JUMP``` opcode must contain ```JUMPDEST``` opcode.
+9)	```JUMPDEST``` opcode mark the target location, valid jump target.
+10)	 ```JUMPI``` opcode only work if 2nd position in stack does not have 0 value, else it fails.
+11)	```STOP``` opcode completely halts contract executions with no return value while ```RETURN``` also halt but with return data from EVM memory.
+12)	```JUMP``` opcode make a jump with value that is pushed on stack before it, from its location to the target location ```JUMPDEST```.
+13)	 Contract creation in evm have ```JUMPI``` opcode with following a ```Revert``` and ```JUMPDEST```.
+14)	Following instruction will lead to ```Revert``` and if not, it will jump to target ```JUMPDEST``` location.
+15)	The value taken to ```JUMPDEST``` location is value of  ```PUSH2``` opcode before the ```JUMPI``` opcode.
+16)	 The ``Return``` and ```STOP``` opcode points towards end of creation code from the very first instruction.
+17)	Creation code is not part of contract as it is executed only once.
+18)	Creation code sets contract initial stage and returning copy of runtime code.
+19)	Contract constructor is part of creation code and not runtime code but return the runtime code copy as it is the actual code of the contract.
+20)	``PUSH1`` opcode push 1 byte data on top of stack.
+21)	```Mstore``` opcode grabs last 2 bytes from stack and store one of them (usually first one into 2nd one) in memory.
+22)	 `` PUSH`` instructions are composed of 2 or more bytes if a ``PUSH`` opcode is given it will skip next number on instruction depend on its number in opcode.
+23)	The free memory pointer is opcode that is present till ``MStore`` opcode.
+24)	After ```MSTORE```, if ``PUSH1`` opcode is present the constructor is marked payable.
+25)	Payable constructor after ``PUSH1`` opcode directly proceed to return which is end of creation code.
+26)	After ```MSTORE```, if ``CALLDATA`` opcode is present the constructor is non payable.
+27)	Non-payable constructor have check starting from ``CALLDATA`` opcode and ends at ``REVERT`` opcode.
+28)	 ``CALLDATA`` opcode in present only when constructor is non-payable which ensures if value sent != 0 it proceed to revert else it jumps.
+29)	All instruction in between ``CALLDATA`` and ``REVERT`` opcode are usually ``DUP1, ISZERO, PUSH2 and JUMPI`` opcode.
+30)	``DUP1`` duplicates 1st element on stack, `` ISZERO`` pushes 1 byte to stack if is 0 at top most and `` PUSH2`` can push 2 bytes to stack.
+31)	``JUMPI`` Opcode only works if no value is involved and will jump to next instruction i.e.  ``JUMPDEST`` after the revert opcode.
+32)	After jump is complete at `` JUMPDEST``, ``POP`` (which is removing of a value from stack) Opcode indicates constructor presence.
+33)	If a value is passed in constructor it will be read and pushed to stack indicates through a ``PUSH1`` and ``MLOAD`` opcode.
+34)	``DUP1`` is a duplicating of value at above instruction after ``PUSH1``.
+35)	After ``DUP1`` if a value is passed to constructor, it will have ``push1`` and ``push2`` followed by ``DUP`` opcode respectively.
+36)	If no value is passed after ``DUP1`` it will have ``push2`` and ``push1`` respectively.
+37)	Afterwards there will be ``CODECOPY`` opcode present in both case if value is passed or not to constructor.
+38)	``CODECOPY`` opcode takes 3 arguments; memory position where result is copied to copy code from(in some case the immediate opcode before), instruction number of the code to copy from and bytes size of code [length] from the instruction.
+39)	 When deploying a contract whose constructor contains parameters, the arguments are appended to the end of the code as raw hex data.
+40)	After ``CODECOPY`` the next instruction till ``MStore`` the value is updated at current position from previous value to current offset value if there is a constructor.
+ 
+# Miscellaneous Topics
+## Try/Catch issue
+1.	Ty/catch responds only to external function calls and contract creation error.
+2.	Response of Try/catch is based on return value and data of low-level calls, when it fails.
+3.	External call fails on 3 conditions i.e.; called contract (or contract function) reverts, called contract does an illegal operation (like dividing by zero or accessing an out-of-bounds array index) and called contract uses up all the gas.
+4.	If an empty revert() is present in the calling function it will return no data ``0x``.
+5.	If revert() have string message revert(‘revertMessage’) the return data will be abi encoding of the function `` Error(string)``.
+6.	Revert error can be empty or takes only string arguments in it.
+7.	The abi encoding of function error includes function selector of `` Error(string)``, offset(location) of string, length of string in bytes and content of the string encoded in hexadecimal.
+ 
+8.	If a function have custom error ``'emptyError()'``without arguments the return data will be first four bytes of the error function selector i.e. ``0xa97a0bd2``.If a function have custom error `` errorArgs(address)'``with arguments the return data will be first four bytes of the error function selector i.e. ``0xad682f1b`` and next 32 bytes will be address of the caller.
+9.	If function reverts with require statement without error message it will return ``0x`` data similar to empty revert.
+10.	When function reverts with require statement the return data will be similar to revert with string message, i.e.; abi encoding of error function.
+
+ 
 # IPFS
 
 1.	Any file can be uploaded/import using IPFS desktop application.
@@ -285,10 +353,15 @@ forge t
 # Auditing
 
 https://github.com/ComposableSecurity/SCSVS/tree/master
+
 https://gist.github.com/Abbasjafri-syed/773bef4cd2d199dc083221127c43684e
+
 https://lab.guardianaudits.com/encyclopedia-of-solidity-attack-vectors/block.timestamp-manipulation
+
 https://github.com/0xNazgul/Blockchain-Security-Library
+
 Test tokens on Sepolia https://blog.sui.io/sui-bridge-live-on-testnet-with-incentives/
+
 
 
 
