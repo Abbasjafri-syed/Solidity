@@ -165,19 +165,25 @@
 85.	Low level call can be made using function signature with method ``abi.encodeWithSignature(functionsignature, param)``.
  
 
-86.	Function signature can be generated from function selector using foundry cast command e.g: cast 4byte functionselectorbyte.
+86.	Uint in solidity is uint256 and should be same in abi.encodeWithSignature  not uint, i.e., ``abi.encodeWithSignature(functionsignature(uint256), param)``.
+87.	Function signature can be generated from function selector using foundry cast command e.g: cast 4byte functionselectorbyte.
  
 
-87.	Function selector can also be used to make low level calls with method ``abi.encodeWithSelector(functionselector, param)``.
+88.	Function selector can also be used to make low level calls with method ``abi.encodeWithSelector(Contract.function.selector, param)``.
  
 
-88.	Difference between calldata and memory is based on type of call made. Memory is call made from inside the contract and calldata is made from outside the contract.
-89.	```Bytes.length``` is method to get data size of bytes.
-90.	```Bytes``` is dynamic data which is used to save or return data without any limit.
-91.	Reverse loop have condition in reversed form with length starting from length of loop and run till condition is greater than 0 and decrement for i. The index taken is (i-1) inside loop code.
+89.	Difference between calldata and memory is based on type of call made. Memory is call made from inside the contract and calldata is made from outside the contract.
+90.	```Bytes.length``` is method to get data size of bytes.
+91.	```Bytes``` is dynamic data which is used to save or return data without any limit.
+92.	Reverse loop have condition in reversed form with length starting from length of loop and run till condition is greater than 0 and decrement for i. The index taken is (i-1) inside loop code.
  
 
-92.	
+Upgradeable Contract
+
+93.	Delegatecall is used to make call to another contract(implement) by caller(proxy).
+94.	Storage slot should be same as that of implement to avoid collision that will overwrite storage value or panic if cannot be encoded(bool/uint into string/bytes).
+ 
+95.	
 
 
 
@@ -310,8 +316,12 @@
 40)	After ``CODECOPY`` the next instruction till ``MStore`` the value is updated at current position from previous value to current offset value if there is a constructor.
  
 # Miscellaneous Topics
+## 63/64 Rule
+
 ## Try/Catch issue
-1.	Ty/catch responds only to external function calls and contract creation error.
+https://www.rareskills.io/post/try-catch-solidity
+
+1.	Try/catch responds only to external function calls and contract creation error.
 2.	Response of Try/catch is based on return value and data of low-level calls, when it fails.
 3.	External call fails on 3 conditions i.e.; called contract (or contract function) reverts, called contract does an illegal operation (like dividing by zero or accessing an out-of-bounds array index) and called contract uses up all the gas.
 4.	If an empty revert() is present in the calling function it will return no data ``0x``.
@@ -319,9 +329,53 @@
 6.	Revert error can be empty or takes only string arguments in it.
 7.	The abi encoding of function error includes function selector of `` Error(string)``, offset(location) of string, length of string in bytes and content of the string encoded in hexadecimal.
  
-8.	If a function have custom error ``'emptyError()'``without arguments the return data will be first four bytes of the error function selector i.e. ``0xa97a0bd2``.If a function have custom error `` errorArgs(address)'``with arguments the return data will be first four bytes of the error function selector i.e. ``0xad682f1b`` and next 32 bytes will be address of the caller.
-9.	If function reverts with require statement without error message it will return ``0x`` data similar to empty revert.
-10.	When function reverts with require statement the return data will be similar to revert with string message, i.e.; abi encoding of error function.
+8.	If a function have custom error ``'emptyError()'``without arguments the return data will be first four bytes of the error function selector i.e. ``0xa97a0bd2``.
+9.	If a function have custom error `` errorArgs(address)'``with arguments the return data will be first four bytes of the error function selector i.e. ``0xad682f1b`` and next 32 bytes will be address of the caller.
+10.	If a function have custom error with arguments ``errorArgs(bool)'`` return data will be first four bytes of function selector of custom error and next 32 bytes will be value of bool.
+11.	If a function have custom error with arguments ``errorArgs(string)'`` the return data will same as the `revert error with string` but 1st 4 bytes will be function selector of custom error.
+12.	If function reverts with require statement without error message it will return ``0x`` data similar to empty revert.
+13.	When function reverts with require statement the return data will be similar to revert with string message, i.e.; abi encoding of error function.
+14.	Custom error with require statement only work for solidity version 0.8.26 or above.
+15.	If a function have custom error without argument in require statement it will revert with first four bytes of the error function selector.
+16.	Require statement with custom error ``errorArgs(address)``with arguments return data will be first four bytes of the error function selector i.e. ``0xad682f1b`` and next 32 bytes will be address of the caller.
+17.	If a function have custom error with arguments ``errorArgs(string)'`` i.e., abi.encoding of error, as the return data will be same as the `revert error with string` but 1st 4 bytes will be function selector of custom error.
+18.	Return data for assert failure is concatenation of the function selector i.e., first 4 bytes of ‘Panic(uint256)’ and the error code i.e., 1.
+19.	 The return data due to failure of unbounded array access is similar assert failure to based on first 4 bytes of ‘Panic(uint256)’ and the error code i.e., 32. In catch panic revert will be in numeric.
+ 
+20.	The return data due to failure of divide by zero is similar assert failure to  based on first 4 bytes of ‘Panic(uint256)’ and the error code i.e., 12.
+ 
+21.	Division by zero in Solidity reverts with an error code of 18 (0x12). Division by zero at the assembly level doesn’t revert, instead it returns 0. That’s because the compiler inserts checks at the Solidity level, which is not done at the assembly level.
+22.	OOG error in low level call does not returns any data and is similar to empty revert().
+23.	Similar to revert() in Solidity, revert(0,0) is the equivalent in Inline assembly. It doesn’t return any error data as the starting memory slot is defined to be 0, and it has a data size of 0, which indicates that no data should be returned.
+24.	revert in assembly takes two parameters: a memory slot and the size of the data in bytes: ``revert(startingMemorySlot, totalMemorySize)``.
+25.	We can control what error data gets returned from an assembly revert by storing selector at zero slot and returning it for revert.
+ 
+
+26.	Try/catch handles exception that occurs during external function calls without reverting back the whole txn. Revert occurs at the called contract.
+27.	Try/catch first execute code at try level if any error occurs it will be caught in catch block.
+28.	Catch block first catch Panic error, then string error and in the last bytes error.
+ 
+
+29.	Panic error block catch error for illegal operations, such as dividing by zero and assert errors as they return panic codes.
+30.	String error block handles all reverts with a reason string. Revert(string) and require(false, “string”) errors will be caught as those errors return the Error(string) error.
+31.	Error excluding Panic or Error will be caught in the generic catch block, including custom errors, require statement and revert without a message string.
+32.	There is no catch block for custom errors, handle it in the generic catch-all block with a manual process i.e., low-level error data corresponds to a specific custom error signature.
+
+ 
+
+33.	Empty revert() inside catch blocks are not caught, while are caught in custom error.
+ 
+34.	If error return is of other type than the catch block, it will not be caught.
+
+ 
+
+35.	If a function implements an interface or calls another function that returns value but the caller function does not return, this will cause catch block unable to caught the error.
+ 
+36.	Revert() inside try block cause reverting not catching of error.
+37.	Try/catch syntax will not catch the error of high level call to a function by a contract, if ```extcodesize``` of the target contract fail; if the address is not a contract.
+38.	Try/catch will fail to catch error if function is expected to return data, it verifies if ```returndatasize``` is not empty.
+39.	Try/catch syntax will fail to catch error, if revert occur due to malformed or non-existent data.
+
 
  
 # IPFS
@@ -353,16 +407,7 @@ forge t
 # Auditing
 
 https://github.com/ComposableSecurity/SCSVS/tree/master
-
 https://gist.github.com/Abbasjafri-syed/773bef4cd2d199dc083221127c43684e
-
 https://lab.guardianaudits.com/encyclopedia-of-solidity-attack-vectors/block.timestamp-manipulation
-
 https://github.com/0xNazgul/Blockchain-Security-Library
-
 Test tokens on Sepolia https://blog.sui.io/sui-bridge-live-on-testnet-with-incentives/
-
-
-
-
-
