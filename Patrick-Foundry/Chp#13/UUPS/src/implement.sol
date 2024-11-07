@@ -9,11 +9,12 @@ import {parentImplement} from "../src/parentImplement.sol";
 contract implementChild is Initializable, UUPSUpgradeable, OwnableUpgradeable, parentImplement {
     bool isInitialized; // variable for initialization
 
+/// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        _disableInitializers(); // avoid front running of initialzer
+        _disableInitializers(); // prevent front running of initialzer for initialize function
     }
 
-    function initializeChild() external initializer {
+    function initializeChild() external initializer { // cannot be called by script
         super.initializeParent(); // calling parent initializer
         isInitialized = true; // intialized to true
     }

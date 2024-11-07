@@ -8,6 +8,7 @@ import {OwnableUpgradeable} from "lib/openzeppelin-contracts-upgradeable/contrac
 contract parentVUp is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     uint256 public value; // variable at slot 0
 
+/// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers(); // avoid front running of initialzer
     }

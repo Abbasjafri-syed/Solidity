@@ -9,11 +9,12 @@ import {parentVUp} from "../src/parentUpV1.sol";
 contract upgradedImplement is Initializable, UUPSUpgradeable, OwnableUpgradeable, parentVUp {
     bool public isInitialize; // variable for initialization
 
+/// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers(); // avoid front running of initialzer
     }
 
-    function initializeChildUp() external reinitializer(2) {
+    function initializeChildUp() external reinitializer(2) {  // cannot be called by script
         super.initializeParent(); // calling parent initializer
         isInitialize = false; // intialized to true
     }
@@ -21,6 +22,7 @@ contract upgradedImplement is Initializable, UUPSUpgradeable, OwnableUpgradeable
     function versionChild() external pure returns (string memory) {
         return "Thy version 2nd";
     }
+
 
     // function _authorizeUpgrade(address newImplementation) internal override onlyOwner {} // upgrade function limited to Owner
 }

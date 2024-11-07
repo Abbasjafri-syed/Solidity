@@ -10,6 +10,5 @@ contract upgradedSecondVersion is UUPSUpgradeable, OwnableUpgradeable {
     function versionChild() external pure returns (string memory) {
         return "Thy version Upgraded_Lastly";
     }
-
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {} // upgrade function limited to Owner
 }
