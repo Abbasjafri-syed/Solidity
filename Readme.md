@@ -165,28 +165,45 @@
 85.	Low level call can be made using function signature with method ``abi.encodeWithSignature(functionsignature, param)``.
  
 
-86.	Uint in solidity is uint256 and should be same in abi.encodeWithSignature  not uint, i.e., ``abi.encodeWithSignature(functionsignature(uint256), param)``.
-87.	Function signature can be generated from function selector using foundry cast command e.g: cast 4byte functionselectorbyte.
+86.	Function signature can be generated from function selector using foundry cast command e.g: cast 4byte functionselectorbyte.
  
 
-88.	Function selector can also be used to make low level calls with method ``abi.encodeWithSelector(Contract.function.selector, param)``.
+87.	Function selector can also be used to make low level calls with method ``abi.encodeWithSelector(functionselector, param)``.
  
 
-89.	Difference between calldata and memory is based on type of call made. Memory is call made from inside the contract and calldata is made from outside the contract.
-90.	```Bytes.length``` is method to get data size of bytes.
-91.	```Bytes``` is dynamic data which is used to save or return data without any limit.
-92.	Reverse loop have condition in reversed form with length starting from length of loop and run till condition is greater than 0 and decrement for i. The index taken is (i-1) inside loop code.
+88.	Difference between calldata and memory is based on type of call made. Memory is call made from inside the contract and calldata is made from outside the contract.
+89.	```Bytes.length``` is method to get data size of bytes.
+90.	```Bytes``` is dynamic data which is used to save or return data without any limit.
+91.	Reverse loop have condition in reversed form with length starting from length of loop and run till condition is greater than 0 and decrement for i. The index taken is (i-1) inside loop code.
  
 
-Upgradeable Contract
-
-93.	Delegatecall is used to make call to another contract(implement) by caller(proxy).
-94.	Storage slot should be same as that of implement to avoid collision that will overwrite storage value or panic if cannot be encoded(bool/uint into string/bytes).
+## [Upgradeable Contract]()
+92.	Delegatecall is used to make call to another contract(implement) by caller(proxy).
+93.	Storage slot should be same as that of implement to avoid collision that will overwrite storage value or panic if cannot be encoded(bool/uint into string/bytes).
+94.	```new``` syntax means deploying a new contract i.e., ```new Implement``` while using only contract name means casting ```Implement```.
+95.	Creating a constructor in the implementation won’t work because it will set the storage variables in the implementation.
+96.	A simple initializable contract doesn’t support ```initializer``` when contracts use inheritance and parent contracts also have to be initialized.
+97.	The initializer modifier, updates the initialized variable to true. This variable is used by all contracts in the inheritance chain and will result in revert when ```child initialize``` is called as it already sets for the ``parent initialize```.x
+98.	OpenZeppelin’s ```Initializable.sol``` contract addresses initializer issue by allowing initialization for all contracts within an inheritance chain.
+99.	The core of Initializable.sol consists of three modifiers: ```initializer```, ```reinitializer``` and ```onlyInitializing```.
+100.	The ```initializer``` modifier should be used during the initial deployment of the upgradable implementation contract and exclusively in the childmost contract.
+101.	The ```reinitializer``` modifier should be used to initialize new versions of the upgradable implementation contract, again only within childmost contracts.
+102.	The ```onlyInitializing``` modifier is used with parent initializers to run during initialization and prevents those initializers from being called in a later transaction.
  
-95.	
-
-
-
+103.	If ```initialize``` is called via ```delegatecall``` from the proxy, the owner is stored in the proxy’s storage. If ```initialize``` is called directly on the implementation, the owner is stored in the implementation’s storage.
+104.	upgradeable should be called only in parentmost contract to avoid double initialization.
+105.	Specific pattern upgradeable only are upgraded to its own pattern like ```UUPS``` upgrade can only be upgraded to ```UUPS```.
+106.	```Initializer``` modifier can be used in constructor to prevent overtaking of implementation ownership but not recommended. ```__disableInitializers()``` function is currently most efficient way to avoid implementation ownership overtaking.
+107.	Initialization function frontrun can be prevented by using ```ERC1967Proxy``` constructor to call the implementation at deploy time. The initialization call must be made at this moment, encoded in the _data variable.
+108.	Maximum limit for upgrade is ``` type(uint64).max```, setting upgrade version to type(uint64).max (_initialized in the implementation) ensures the implementation contract will never be initialized.
+109.	Care must be taken to not initialize the same contract twice, which can occur in an inheritance chain where two contracts share the same parent.
+110.	```_disableInitializers()```prevent front running of initializer for initialize function by restricting calling initialize function through implementation contract.
+111.	UUPS have upgrade logic in implementation while Transparent have logic in proxy.
+112.	Transparent requires ```AdminProxy``` to call every function while UUPS only required admin call for upgrade.
+113.	Transparent pattern can be upgrade to a non upgradeable contract while UUPS only can be upgraded to an upgradable contract.
+114.	UUPS make call to upgrade from function ``` upgradeToAndCall``` for new implementation.
+115.	Logic in UUPS contract can be added to `` _authorizeUpgrade `` for new implementation.
+116.	If ``Ownable`` library is used in initialize of upgradeable then upgrade to new implementation cannot be carried out with script.
 
  
 # Foundry-test
@@ -316,8 +333,6 @@ Upgradeable Contract
 40)	After ``CODECOPY`` the next instruction till ``MStore`` the value is updated at current position from previous value to current offset value if there is a constructor.
  
 # Miscellaneous Topics
-## 63/64 Rule
-
 ## Try/Catch issue
 https://www.rareskills.io/post/try-catch-solidity
 
@@ -378,6 +393,12 @@ https://www.rareskills.io/post/try-catch-solidity
 
 
  
+# In-Line Assembly Solidity
+1.	Sstore store value at given storage slot, while sload retrieve value stored at given slot.
+ 
+2.	
+
+ 
 # IPFS
 
 1.	Any file can be uploaded/import using IPFS desktop application.
@@ -411,3 +432,7 @@ https://gist.github.com/Abbasjafri-syed/773bef4cd2d199dc083221127c43684e
 https://lab.guardianaudits.com/encyclopedia-of-solidity-attack-vectors/block.timestamp-manipulation
 https://github.com/0xNazgul/Blockchain-Security-Library
 Test tokens on Sepolia https://blog.sui.io/sui-bridge-live-on-testnet-with-incentives/
+
+
+
+
