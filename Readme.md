@@ -72,7 +72,7 @@
 8.	Array declared with data types are dynamic i.e., struct[] arr. Static array are defining number of values during declaration struct[5] arr.
 9.	10 ** 18 and 1e18 is same thing. 
 10.	Struct[index].datatype is method to read value inside of struct at a given index.
-11.	keccak256(abi.encode(string ) is method to convert string into bytes.
+11.	keccak256(abi.encode(string)) is method to convert string into bytes.
 12.	6 areas evm store information i.e.; storage, memory, call data, code, stack and logs[events].
 13.	Calldata and memory are temporary storage executed during function.
 14.	Calldata cannot be modified. Storage and memory data types can be modified.
@@ -249,8 +249,14 @@
 155.	Transparent Proxy upgrade logic resides in the ProxyAdmin contract.
 156.	Transparent Proxy can become non-upgradeable if its admin is set to address(0) or to a smart contract that cannot call ``` upgradeAndCall()``` function i.e., admin set  to another ProxyAdmin contract.
 157.	Transparent proxy is deployed using OZ (can be through script), with security measures like ‘’ Initializer`` in initialize function and ``_disableInitializers()`` in the constructor for preventing taking over of implementation.
-158.	
-159.	 
+## BeaconProxy
+158.	Beacon proxy pattern is based on 2 main contracts i.e.; ‘UpgradeableBeacon’ & ‘BeaconProxy’.
+159.	``UpgradeableBeacon`` constructor is used for initializing implementation.
+160.	``UpgradeableBeacon`` stores in it implementation address and upgrade function.
+161.	``UpgradeableBeacon`` can only be used for upgrading functionality not calling implement address functionality.
+162.	 ‘BeaconProxy’ is factory type contract used for creating proxies that point to UpgradeableBeacon which points to implementation. BeaconProxy  UpgradeableBeacon  Implemenation/Logic.
+163.	``BeaconProxy`` is used to call functionality of implementation except upgrading which is stored in `` UpgradeableBeacon``.
+164.	
 
  
 # Foundry-test
@@ -475,9 +481,13 @@ forge t
 # Auditing
 
 https://github.com/ComposableSecurity/SCSVS/tree/master
+
 https://gist.github.com/Abbasjafri-syed/773bef4cd2d199dc083221127c43684e
+
 https://lab.guardianaudits.com/encyclopedia-of-solidity-attack-vectors/block.timestamp-manipulation
+
 https://github.com/0xNazgul/Blockchain-Security-Library
+
 Test tokens on Sepolia https://blog.sui.io/sui-bridge-live-on-testnet-with-incentives/
 
 
