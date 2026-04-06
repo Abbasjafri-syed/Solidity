@@ -54,8 +54,8 @@
 52.	An argument can be passed to an function through variable with accessing  i.e.; uint test = 2; test = test.mul(3);.
 53.	require  refund the rest of gas when a function fails, whereas assert not.
 54.	Safemath method can be instead of decrement or increment like instead maker++ use maker.add(1).
-55.	Natspec are comments with different  tags like author, dev, title, param, audit etc.
-56.	
+55.	Natspec are comments with different tags like author, dev, title, param, audit etc.
+56.	Super keyword overrides same function name from parent contract.
 57.	 
 58.	
  
@@ -256,7 +256,69 @@
 161.	``UpgradeableBeacon`` can only be used for upgrading functionality not calling implement address functionality.
 162.	 ‘BeaconProxy’ is factory type contract used for creating proxies that point to UpgradeableBeacon which points to implementation. BeaconProxy  UpgradeableBeacon  Implemenation/Logic.
 163.	``BeaconProxy`` is used to call functionality of implementation except upgrading which is stored in `` UpgradeableBeacon``.
-164.	
+
+## DiamondProxy
+164.	The Diamond(Proxy) contract receives data as ``msg.sig`` and triggers fallback function that have ``facetAddress()`` function.
+165.	 ``facetAddress()`` function use ``msg.sig`` to identify the facet address containing the function selector for which the call is made.
+166.	The Diamond(Proxy) then delegatecalls that address with the same calldata it received.
+167.	The EIP-2535 does not specify how to map function selectors to the addresses of the implementation contracts.
+168.	Diamond(Proxy) contract requires four public view functions — but if its is diamond is upgradeable, a ﬁfth state-changing function(diamondCut) for switching out the implementation contracts is required.
+169.	The four public view functions are ``facetAddress``, ``facetAddresses``, ``facetFunctionSelectors`` and ``facets``reffered to as ``loupe`` functions.
+170.	``facetAddress(bytes4 _functionSelector)`` The facet address that stores the function  is found and returned.
+171.	``facetAddresses()`` array of facet addresses used by the diamond is returned.
+172.	``facetFunctionSelectors(address _facet)`` The array of function selectors supported by facet are returned.
+173.	``facets()`` The array of facet addresses is looped through to get each facet address and its function selectors.
+174.	Facets (implementation) are deployed separately, and the proxy is “informed” of them later.
+175.	State variables in facets are grouped in struct. The struct is stored in storage namespaces for each facet (implementation) avoiding storage collision.
+176.	It is better to store struct and storage namespace in a library.
+177.	Diamond stores the variable in diamond storage.
+178.	Diamond proxy must implement ``IDiamondLoupe`` to be compliant with ``EIP-2535``.
+179.	When a facet is added or make any alteration such as replacing or removing or upgrading, that action is called a `` DiamondCut``.
+180.	``DiamondCut`` facet is used for logging add, remove or replace of a function selector as a single function having event.
+181.	A facet(implementation) can only be removed from diamond(proxy) when all the associated function selectors are removed first. Facets are implicitly added when a function selector with a new implementation address.
+182.	Function selectors can be determined both by parsing the past logs from ``DiamondCut`` and by calling the view functions in ``IDiamondLoupe``.
+183.	``DiamondCut`` have mapping to store selector for each address.
+184.	Adding must checked for pre existing selector for a given address to avoid selector clash.
+185.	Facet(Implementation) is deployed first then in diamond (proxy) facet and selectors are passed as constructor arguments and initialize in same txn.
+186.	Upgrade is carried out by first deployed facet then diamond cut is called in proxy to remove or add facet.
+ 
+## StableCoin
+187.	‘Super’ keyword is used if child contract have same function name of the base contract.
+188.	A token return usually less decimals on chainlink pricefeed i.e. `8` which can be turned into 18 decimals by multiplying with 10 decimals values like `1e10`.
+ 
+189.	Fiat value of token can be calculated by getting the price of tokens from oracle and multiply with required decimals to convert into 18 decimals and with collateral amount, then division by wad i.e.``1400e8 * 1e10 * 2 / 1e18``.
+ 
+
+190.	Redeem and burn functions are opposite logic of deposit & mint function.
+191.	A token from fiat value can be converted to `WEI` value by  taking the fiat price and multiply with 1e18 and then divided by token price (adjusting to 18 decimals). i.e. ``(5000 * 1e18) / (2000e8 * 1e10)``.
+ 
+
+192.	Minting capacity for over-collateralized token can be calculated by collateral Value multiply with threshold value ,divided by threshold Limit i.e. ``2000 * 65 / 100``.
+ 
+
+193.	Mint capacity with remaning collateral can be calculated with using same above formulae with substracting the minted amount i.e. ``5000 – 2000``.
+ 
+194.	User health can be calculated with formula minting capacity divided by total token minted i.e. `` 5000 / 2000``.
+ 
+ 
+195.	dfedf
+ 
+## AbstractAccount
+196.	IAccount interface is necessary for account abstraction to validate the operation carried out by signer.
+197.	PackedUserOperation is data containing all information with signature, while userOpHash is hash of the signed data passed and missingfunds are funds provided to carry out the txn.
+198.	``MessageHashUtils`` library is used for converting a hash data into ``EIP191`` format to be readable for ecdsa.
+199.	Data can be signed with format address of the signer and hash of data ``vm.sign(config.sender, digest)``.
+200.	Signing the data is based in getting ``v,r,s`` values which are formed with ``abi.encodePacked(r,s,v)`` format.
+201.	To create a signed message first generate it unsigned message , then use Entrypoint ``userOpHash`` function to hash it, then use messageutils to make into eip compliant hash and then use the msgHash to sign; afterwards use encodedPacked ``v,r,s`` to assign the sign to the hash.
+``unsigned message  Entrypoint ``userOpHash``    messageutils  msgHash to sign  encodedPacked ``v,r,s`` assign the signature.``
+
+202.	To retrieve address from signed messaged first use the Entrypoint ``userOpHash``, then use messageutils to make into eip compliant hash, then use ``ECDSA .recover`` function to get the address.
+``signed message  Entrypoint ``userOpHash``    messageutils  ECDSA .recover  address``.
+
+ 
+1.	
+2.	Corner test case : trigger this function both by sending no calldata or by sending 0x00000000 as calldata
+3.	Try this ﬁrst calling facetAddresses() to get all the facet addresses looping through each facet address, and putting that address in the ﬁeld facetAddress of Facet struct and calling facetFunctionSelectors() on the address and putting the list of function selectors in the functionSelectors ﬁeld of the struct.
 
  
 # Foundry-test
@@ -336,7 +398,8 @@
 72.	Persmission should be given with ```fs_permissions = [{ access = "read", path = "./broadcast" }]``` for correct functioning of devops.
 73.	```vm.readFile(relative path)``` is foundry cheatcode use to access data of other files.
 74.	vm.readFile("relative path") returns data in string form.
-75.	
+75.	```solc --hashes ContractFile.sol``` is cli used for generating function selectors for contract. The current directory must be used in which contract is present.
+76.	``ContractName.function.selector`` is method to generate function selector.
  
  
 # EVM Bytecode- Solidity
@@ -462,17 +525,22 @@ https://www.rareskills.io/post/try-catch-solidity
 ```sh
 # 1st try this
 
-forge i foundry-rs/forge-std --no-commit
+forge i foundry-rs/forge-std
 
 
 # If above cmd fail install lib/forge-std
-forge init --force --no-commit
+forge init --force 
+
+
+# .gitmodules uses git@github.com: instead of the https://github.com/
+git config --global url."https://github.com/".insteadOf git@github.com
+then forge install
 
 # Install openzeppelin-contracts  gitmodules// same for any other dependencies 
 # all installation will be on latest version if specific version is require use @v4.9.4
 
-forge i OpenZeppelin/openzeppelin-contracts --no-commit
-forge i OpenZeppelin/openzeppelin-contracts-upgradeable --no-commit
+forge i OpenZeppelin/openzeppelin-contracts
+forge i OpenZeppelin/openzeppelin-contracts-upgradeable
 
 # Run test
 forge t
@@ -481,13 +549,9 @@ forge t
 # Auditing
 
 https://github.com/ComposableSecurity/SCSVS/tree/master
-
 https://gist.github.com/Abbasjafri-syed/773bef4cd2d199dc083221127c43684e
-
 https://lab.guardianaudits.com/encyclopedia-of-solidity-attack-vectors/block.timestamp-manipulation
-
 https://github.com/0xNazgul/Blockchain-Security-Library
-
 Test tokens on Sepolia https://blog.sui.io/sui-bridge-live-on-testnet-with-incentives/
 
 
