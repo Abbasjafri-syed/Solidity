@@ -119,8 +119,8 @@ contract DSCEngine is ReentrancyGuard {
     }
 
     function BurnDSC(address collateral, uint256 amount) public AddrZero(collateral) ValueZero(amount) {
-        _burnDSC(msg.sender, collateral, amount); //calling burn pvt function
         revertforBrokenHealthFactor(msg.sender); // checking for health
+        _burnDSC(msg.sender, collateral, amount); //calling burn pvt function
     }
 
     function liquidateUser(address collateral, address user) external AddrZero(collateral) nonReentrant {
@@ -233,5 +233,13 @@ contract DSCEngine is ReentrancyGuard {
         (, int256 price,,,) = priceFeed.latestRoundData(); // calling function to get Latest Data
         uint256 WeiValue = (FiatValue * wad) / (uint256(price) * feedPrecise); // price in uint
         return WeiValue;
+    }
+
+    function getCollaterals() external view returns (address[] memory) {
+        return collateralToken;
+    }
+
+    function getDepositedCollaterals(address user, address token) external view returns (uint256) {
+        return tokenDeposited[user][token];
     }
 }

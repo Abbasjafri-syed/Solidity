@@ -21,6 +21,7 @@ contract HelperConfig is Script {
 
     constructor() {
         if (block.chainid == 11155111) ActiveNetworkConfig = getSepoliaNetwork(); // if network sepolia user sepolia function
+
         else ActiveNetworkConfig = getAnvilNetwork(); // if network is local using Anvil function
     }
 
@@ -47,7 +48,8 @@ contract HelperConfig is Script {
 
         if (ActiveNetworkConfig.collateralWBTCfeed != address(0)) {
             return ActiveNetworkConfig; // checking if already deploys return value
-        } else { // if already not deployed returns below construct
+        } else {
+            // if already not deployed returns below construct
             return NetworkConfig({
                 collateralWBTCfeed: address(WbtcFeed),
                 collateralWETHfeed: address(WethFeed),
